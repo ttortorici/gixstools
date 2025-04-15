@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gixstools"
+version = "0.0.23"
+description = "Python package to quickly transform images from grazing incidence X-ray experiments using C"
+readme = { file = "README.md", content-type = "text/markdown" }
+authors = [
+    { name = "Teddy Tortorici", email = "edward.tortorici@colorado.edu" }
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+classifiers = [
+    "Natural Language :: English",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    # "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "numpy>=1.7",
+    "pyFAI",
+    "fabio",
+    "matplotlib"
+]
+requires-python = ">=3.9"
+
+[project.scripts]
+gixpy-transform = "gixstools.programs:transform"
+
+[project.urls]
+Repository = "https://github.com/ttortorici/gixstools"
+Issues = "https://github.com/ttortorici/gixstools/issues"
+
+[tool.setuptools]
+packages = ["gixstools", "gixstools.wedge"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+gixstools = ["**/*.mplstyle"]
