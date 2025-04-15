@@ -1,0 +1,6 @@
+[macro]
+set_omega = "umv om {:.4f}\n"
+set_vertical = "umv z {:.4f}\n"
+move_beamstop = "umv wbs {:.4f}\n"
+move_vertical = "umvr z {:.4f}\n"
+expose = "eiger_run 0.1 {}.tif\n"

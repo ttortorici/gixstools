@@ -8,24 +8,23 @@ For a detector that is surface normal to the incident beam, the PONI is equivale
 import numpy as np
 import matplotlib.pylab as plt
 from matplotlib.colors import LogNorm, Normalize
-import pyFAI
 from pathlib import Path
-import pyFAI.azimuthalIntegrator
 import pyFAI.detectors
+from pyFAI.integrator.azimuthal import AzimuthalIntegrator
 plt.style.use('gixstools.style')
 
 
 def new(dist: float, poni1: float, poni2: float, shape: tuple, pixel1: float = 75e-6, pixel2: float = 75e-6,
         wavelength: float = 1.54185e-10, rot1: float = 0, rot2: float = 0, rot3: float = 0, orientation: int = 2):
     """
-    Creates a pyFAI.azimuthalIntegrator object from user defined parameters
+    Creates a pyFAI.integrator.azimuthal.AzimuthalIntegrator object from user defined parameters
 
     :param dist: sample-detector distance in meters.
     :param poni1: distance of PONI 
     """
     detector = pyFAI.detectors.Detector(pixel1=float(pixel1), pixel2=float(pixel2), max_shape=shape, orientation=orientation)
-    ai = pyFAI.azimuthalIntegrator.AzimuthalIntegrator(float(dist), float(poni1), float(poni2), rot1, rot2, rot3, pixel1, pixel2,
-                                                       detector=detector, wavelength=wavelength, orientation=orientation)
+    ai = AzimuthalIntegrator(float(dist), float(poni1), float(poni2), rot1, rot2, rot3, pixel1, pixel2,
+                                                        detector=detector, wavelength=wavelength, orientation=orientation)
     return ai
 
 
@@ -102,12 +101,12 @@ class Locator:
     This is best used in a Jupyter Notebook, as exemplified in transform-GIWAXS.ipynb in examples.
     """
 
-    def __init__(self, ai: pyFAI.AzimuthalIntegrator, data: np.ndarray, flat_field: np.ndarray = None,
+    def __init__(self, ai: AzimuthalIntegrator, data: np.ndarray, flat_field: np.ndarray = None,
                  incident_angle: float = 0, radii: list = [12, 5], IM_SIZE: tuple = (6.3, 3), log: bool = True):
         """
         Instantiate gixstools.wedge.poni.Locator object
 
-        :param ai: starting geometry using pyFAI.AzimuthalIntegrator. This can be generated with `new_poni()`.
+        :param ai: starting geometry using pyFAI.integrator.azimuthal.AzimuthalIntegrator. This can be generated with `new_poni()`.
         :param data: image file.
         :param flat_field: optional flat field correction file.
         :param incident_angle: grazing incident angle in degrees.
