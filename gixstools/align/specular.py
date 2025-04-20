@@ -1,6 +1,7 @@
 import matplotlib.offsetbox
 import numpy as np
 import fabio
+import re
 from gixstools.detector import Detector, RawLoader, load_raw
 import gixstools.config
 from scipy.optimize import curve_fit, root_scalar
@@ -29,21 +30,30 @@ class SpecularScan:
     compressed_filename = "compressed_scan.npz"
     detector = Detector()
 
-    def __init__(self, directory: Path, approximate_detector_distance: float):
+    def __init__(self, directory: Path, approximate_detector_distance_meters: float, beam_cut_in_widths: float = 1., max_angle_degrees: float = 1.):
         self.directory = directory
-        self.dist_guess = approximate_detector_distance
+        self.dist_guess = approximate_detector_distance_meters
 
+        self.z0 = 0
+        self.data_remove = None # revisit
+        self.type = None
         self.motor_positions = None
         self.z_positions = None
         self.specular_intensities = None
+        self.all_images = None
         self.direct_beam = None
+
+        self.beam_width = None
+        self.beam_center = None
+
+        self.beam_cut = beam_cut_in_widths
 
         """Determine if there is a compression"""
         if (directory / self.compressed_filename).is_file():
             self.load_compressed()
         else:
             raw = self.load_raw()
-            self.process_data(raw)
+            self.process_data(raw, max_angle_degrees)
     
     def load_compressed(self):
         file_list = list(self.directory.glob("*" + IM_TYPE))
@@ -65,6 +75,8 @@ class SpecularScan:
         db_file = file_list[db_ind]
         del(file_list[db_ind])
         self.direct_beam = DirectBeam(db_file)
+        self.beam_center = self.direct_beam.center[0] * self.detector.pixel1 * UNIT_CONV
+        self.beam_width = self.direct_beam.width[0] * self.detector.pixel1 * UNIT_CONV
         motor = np.empty_like(file_list, dtype=np.float64)
         full_data = np.empty((len(file_list), *self.detector.shape), dtype=np.float64)
         scan_types = [""] * len(file_list)
@@ -74,45 +86,76 @@ class SpecularScan:
                 scan_types[ii] = "om"
             elif "z" in file.name:
                 scan_types[ii] = "z"
-            motor[ii] = self.get_angle(file)
+            motor[ii] = self.get_motor_position(file)
             full_data[ii] = loader.load(file)
 
-        self.type = max(set(scan_types), key=scan_types.count)
+        self.type = max(set(scan_types), key=scan_types.count)  # either 'om' or 'z'
         
         sorting_args = np.argsort(motor)
         self.motor_positions = motor = motor[sorting_args]
-        intensity_data = intensity_data[sorting_args]
+        intensity_data = full_data[sorting_args]
         return intensity_data
 
-    def process_data(self, raw_data):
-        rows_above = int(self.dist_guess / self.detector.pixel1 * 0.0698)  # tan(4 degrees) = 0.0698
-        rows_below = int(self.direct_beam.width[0] * 5)
-        self.z_positions = np.arange(self.detector.shape[0]) #- self.
-        self.z_positions -= (self.detector.shape[0] - self.beam_center[0]) * self.pixel_size
-        bc_z = round(self.beam_center[0])
-        z_lo = bc_z - self.pixels_above
-        z_hi = bc_z + self.pixels_below
-        self.z = self.z[z_lo:z_hi]
-        if self.beam_width is None:
-            data = self.intensity_data[:, z_lo:z_hi, :]
-        else:
-            half_width = 0.5 * self.beam_width / self.pixel_size
-            x_lo = round(self.beam_center[1] - half_width)
-            x_hi = round(self.beam_center[1] + half_width)
-            x_lo += self.pixel_horiontal_offset
-            x_hi += self.pixel_horiontal_offset
-            data = self.intensity_data[:, z_lo:z_hi, x_lo:x_hi]
-        self.intensity_specular = np.sum(data, axis=2).T
+    def process_data(self, raw_data: np.ndarray, max_angle: float = 3.):
+        self.z_positions = self.direct_beam.center[0] - np.arange(self.detector.shape[0])  # now positive direction is up
 
-    def get_angle(self, filename: Path) -> float:
-        if self.file_type == ".edf":
-            angle = fabio.open(filename).header["Comment"].replace("Base - ", "")
-        elif self.file_type == ".tif":
-            angle = self.angle_from_filename(filename.name)
-        return float(angle)
+        crop_above = int(self.direct_beam.center[0] - self.dist_guess / self.detector.pixel1 * np.tan(2. * np.radians(max_angle)))
+        crop_below = int(self.direct_beam.center[0] + self.direct_beam.width[0] * 5)
+        crop_left  = int(self.direct_beam.center[1] - self.direct_beam.width[1] * 1.5)
+        crop_right = int(self.direct_beam.center[1] + self.direct_beam.width[1] * 1.5)
+
+        self.z_positions = self.z_positions[crop_above:crop_below] * self.detector.pixel1 * UNIT_CONV
+
+        self.all_images = raw_data[:, crop_above:crop_below, crop_left:crop_right]
+        
+        self.intensity_specular = np.sum(self.all_images, axis=2).T
+
+    def show_crops(self, image_indices: list, figsize: tuple = None):
+        pos = [None] * len(image_indices)
+
+        max_value = self.all_images[image_indices, :, :].max()
+
+        fig, axes = plt.subplots(1, len(image_indices), figsize=figsize)
+        for ii, (ax, ind) in enumerate(zip(axes, image_indices)):
+            pos[ii] = self.plot_crop(ax, ind, max_value)
+        cb = fig.colorbar(pos[-1], ax=axes.ravel().tolist(), fraction=0.0315, pad=.05, anchor=(1000,.5))
+        cb.ax.tick_params(which="both", direction="out")
+        if self.type == "om":
+            # axes[int(len(image_indices) * 0.5)].set_title("$\\omega$-motor position")
+            fig.suptitle("$\\omega$-motor position", fontsize=11, y=0.9)
+        elif self.type == "z":
+            # axes[int(len(image_indices) * 0.5)].set_title("$z$-motor position")
+            fig.suptitle("$z$-motor position", fontsize=11, y=.9)
+        return fig, axes
+
+    def plot_crop(self, ax: matplotlib.axes._axes.Axes, im_ind: int, max_value: float = None):
+        ax.set_facecolor("k")
+        image = self.all_images[im_ind]
+        if max_value is None:
+            max_value = image.max()
+        pos = ax.imshow(image, norm=LogNorm(1, max_value), aspect='equal')
+        motor_position = self.motor_positions[im_ind]
+        if self.type == "om":
+            title = f"${motor_position:.2f}\\degree$"
+        elif self.type == "z":
+            title = f"{motor_position:.2f} mm"
+        ax.set_title(title, fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return pos
+
+    def get_motor_position(self, filename: Path) -> float:
+        if WHERE_INFO.lower() == "title":
+            angle = self.motor_angle_from_file_info(filename.name)
+        elif WHERE_INFO.lower() == "header":
+            comment = fabio.open(filename).header["Comment"]
+            angle = float(re.search(r"[-+]?\d*\.\d+|[-+]?\d+", comment).group())
+        else:
+            raise ValueError("align.info must be 'header' or 'title' in config.toml")
+        return angle
 
     @staticmethod
-    def angle_from_filename(filename: str):
+    def motor_angle_from_file_info(filename: str):
         left_of_decimal = filename.split("_")[-3]
         angle = float(left_of_decimal)
         right_of_decimal = filename.split("_")[-2].replace(".tif", "")
@@ -123,14 +166,12 @@ class SpecularScan:
         angle = round(angle, 3)
         return angle
 
-
-
     def show_direct_beam(self, figsize=None, column=False):
         if column:
-            fig, axes = self.direct_beam.plot_column(figsize)
+            fig, axes = self.direct_beam.plot_column(figsize=figsize)
         else:
-            fig, axes = self.direct_beam.plot_quad(figsize)
-
+            fig, axes = self.direct_beam.plot_quad(figsize=figsize)
+        return fig, axes
     
     def save(self):
         data = {
@@ -138,9 +179,221 @@ class SpecularScan:
             "z_positions": self.z_positions,
             "intensities": self.specular_intensities
         }
-        np.savez_compressed(self.directory / self.compressed_filename)
+        np.savez_compressed(self.directory / self.compressed_filename, **data)
 
+    #############################
 
+    def fit(self, z0=None, max_angle=1, pixel_cut=None, standard_deviations=None):
+        if self.type == "om":
+            self.fit_om(z0, max_angle, pixel_cut, standard_deviations)
+            
+            # if self.data_remove:
+            #     self.refit_om()
+
+        elif self.type == "z":
+            self.fit_z(standard_deviations)
+        else:
+            raise AttributeError("Scan type was not established.")
+        
+    def fit_om(self, z0: float=None, max_angle: float = 1., pixel_cut: int=None, cut_in_widths: float=None):
+        if z0 is not None:
+            self.z0 = z0
+        if cut_in_widths is not None:
+            self.beam_cut = cut_in_widths
+
+        self.counts_total = np.sum(self.intensity_specular, axis=0)
+        self.counts_specular = np.sum(
+            self.intensity_specular[np.where(self.z_positions > self.beam_width * self.beam_cut)],
+            axis=0
+        )
+        self.counts_dbeam = np.sum(
+            self.intensity_specular[np.where(self.z_positions < self.beam_width * self.beam_cut)],
+            axis=0
+        )
+        # print(f"z\u2080 = {self.z0}")
+        max_ind = np.argmax(self.intensity_specular, axis=1)
+        where_max_angle = self.motor_positions[max_ind]
+        
+        print(self.z_positions)
+        print(self.z0)
+        print(self.dist_guess * np.radians(max_angle) * UNIT_CONV + self.z0)
+        # Remove data below the beam center
+        valid = np.where(np.logical_and(
+            self.z_positions > self.z0,
+            self.z_positions < self.dist_guess * np.radians(max_angle) * UNIT_CONV + self.z0
+            ))
+        self.z_valid = self.z_positions[valid]
+        self.where_max_angle = where_max_angle[valid]
+        if pixel_cut is not None:
+            self.z_valid = self.z_valid[:-pixel_cut]
+            self.where_max_angle = self.where_max_angle[:-pixel_cut]
+        
+        (self.omega0, self.det_dist_fit), pcov = curve_fit(self.specular_om_fit, self.where_max_angle, self.z_valid, p0=[0, self.dist_guess])
+        self.perr = np.sqrt(np.diag(pcov))
+        print("Fit results:")
+        print(f"    \u03C9\u2080 = ({self.omega0} \u00B1 {self.perr[0]})\u00B0")
+        print(f"    d\u209B = ({self.det_dist_fit} \u00B1 {self.perr[1]}) mm")
+        
+    def plot_om(self):
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 7))
+        if self.plot_title:
+            fig.suptitle(self.plot_title, fontsize=12)
+
+    def plot_specular_fit(self, ax):
+        """FIT THROUGH MAX COUNT IN EACH ROW"""
+        ax1.scatter(self.where_max_angle, self.z_valid, s=10, marker='o',
+                    edgecolors='k', lw=.75, facecolor='w')
+        omega = np.linspace(self.where_max_angle[-1] - 0.02, self.where_max_angle[0] + 0.02, 100)
+        ax1.plot(omega, self.specular_om_fit(omega, self.omega0, self.det_dist_fit), "r")
+        
+        ax1.set_ylabel("$z$ (mm)", fontsize=12)
+        ax1.set_title("where max pixel occurs", fontsize=12)
+        # ax.legend(title="pixel")
+        annotation_text = f"$\\omega_0 = {self.omega0:.4f} \\pm {self.perr[0]:.4f}^\\circ$\n$d_{{sd}} = {self.det_dist_fit:.2f} \\pm {self.perr[1]:.2f}$ mm"
+        ax1.text(omega.min(), 0.95 * self.max_angle, annotation_text, transform=ax1.transAxes, fontsize=12,
+                 verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+        
+    def plot_trad_om_scan(self, ax):
+        """TRADITIONAL OM SCAN"""
+        ax2.scatter(self.angles, self.counts_total,
+                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
+        ax2.set_title("Total Counts")
+
+        ax3.scatter(self.angles, self.counts_specular,
+                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
+        ax3.set_title("Counts above beam")
+
+        ax4.scatter(self.angles, self.counts_dbeam,
+                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
+        ax4.set_title("Counts in Direct Beam")
+        
+        for ax in (ax1, ax2, ax3, ax4):
+            ax.tick_params(axis='both', which='both', direction='in', right=True, top=True)
+            ax.set_xlabel("$\\omega$ motor position $(\\degree)$", fontsize=12)
+            ax.grid(linestyle='dotted')
+            ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+            ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+        for ax in (ax2, ax3, ax4):
+            ax.set_ylabel("Counts")
+        fig.tight_layout()
+        
+        self.save_fig(fig)
+    # def refit_om(self):
+    #     difference = np.abs(self.z_valid - self.specular_om_fit(self.where_max_angle, self.omega0, self.det_dist_fit))
+    #     keep_inds = np.sort(np.argsort(difference)[:len(difference) - self.data_remove])
+    #     (self.omega0, self.det_dist_fit), pcov = curve_fit(self.specular_om_fit,
+    #                                                        self.where_max_angle[keep_inds],
+    #                                                        self.z_valid[keep_inds],
+    #                                                        p0=[0, self.det_dist_fit])
+    #     self.perr = np.sqrt(np.diag(pcov))
+    #     print("Fit results:")
+    #     print(f"    \u03C9\u2080 = ({self.omega0} \u00B1 {self.perr[0]})\u00B0")
+    #     print(f"    d\u209B = ({self.det_dist_fit} \u00B1 {self.perr[1]}) mm")
+
+    def fit_z(self, standard_deviations=None):
+        if standard_deviations is not None:
+            self.standard_deviations = standard_deviations
+        self.counts_total = np.sum(self.intensity_specular.T, axis=0)
+        self.counts_specular = np.sum(
+            self.intensity_specular.T[np.where(self.z > self.standard_deviations * self.bc_sigma)],
+            axis=0
+        )
+        self.counts_dbeam = np.sum(
+            self.intensity_specular.T[np.where(self.z < self.standard_deviations * self.bc_sigma)],
+            axis=0
+        )
+
+        print("Fit results:")
+        fit_names = ["max", "z\u2080", "\u03C3\u2080"]
+        unit_names = ["counts", "mm", "mm"]
+        try:
+            self.total_fit, pcov_total = curve_fit(self.occlusion_fit_single, self.z_motor, self.counts_total,
+                                                   # p0=(1e6, 0.5, self.bc_sigma))
+                                                   p0=(self.counts_total.max(), 0.5 * (self.z_motor.min() + self.z_motor.max()), self.bc_sigma))
+            self.perr_total = np.sqrt(np.diag(pcov_total))
+            print("  Total counts:")
+            for name, fit_res, err, unit in zip(fit_names, self.total_fit, self.perr_total, unit_names):
+                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
+            self.success_total = True
+        except RuntimeError:
+            print("Failed to fit total counts")
+            self.success_total = False
+
+        try:
+            self.dbeam_fit, pcov_dbeam = curve_fit(self.occlusion_fit_single, self.z_motor, self.counts_dbeam,
+                                                   # p0=(1e6, 0.5, self.bc_sigma)
+                                                   p0=(self.counts_dbeam.max(), 0.5 * (self.z_motor.min() + self.z_motor.max()), self.bc_sigma))
+            self.perr_dbeam = np.sqrt(np.diag(pcov_dbeam))
+            print("  Primary beam counts:")
+            for name, fit_res, err, unit in zip(fit_names, self.dbeam_fit, self.perr_dbeam, unit_names):
+                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
+            self.success_dbeam = True
+        except RuntimeError:
+            print("Failed to fit direct beam counts")
+            self.success_dbeam = False
+
+        try:
+            self.specz_fit, pcov_specz = curve_fit(self.specular_z_fit, self.z_motor, self.counts_specular,
+                                                   # p0=(1e5, .4, .7, 0.5 * self.bc_sigma, 0.5 * self.bc_sigma))
+                                                   p0=(self.counts_specular.max(), self.z_motor.min(), self.z_motor.max(), 0.5 * self.bc_sigma, 0.5 * self.bc_sigma))
+            self.perr_specz = np.sqrt(np.diag(pcov_specz))
+            fit_names = ["max", "z\u2081", "z\u2082", "\u03C3\u2081", "\u03C3\u2082"]
+            unit_names = ["counts", "counts", "mm", "mm", "mm", "mm"]
+            print("  Specular counts:")
+            for name, fit_res, err, unit in zip(fit_names, self.specz_fit, self.perr_specz, unit_names):
+                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
+            self.success_specz = True
+        except RuntimeError:
+            print("Failed to fit specular counts")
+            self.success_specz = False
+
+        self.plot()
+
+    def specular_om_fit(self, omega, omega0, det_dist):
+        return det_dist * np.tan(2. * np.radians(omega - omega0)) + self.z0
+    
+    def specular_om_fit2(self, omega, omega0, det_dist, radial_offset, rotation_offset):
+        alpha = np.radians(omega - omega0)
+        vertical_offset = radial_offset * (np.sin(rotation_offset + alpha) - np.sin(rotation_offset))
+        return (det_dist - radial_offset * np.cos(rotation_offset + alpha)) * np.tan(2. * alpha) + vertical_offset
+
+    
+    @staticmethod
+    def specular_om_error(omega, omega0, det_dist, omega_err, dist_err):
+        omega_center = omega - omega0
+        dist_deriv = np.tan(2. * omega_center)
+        sec_2omega = 1. / np.cos(2. * omega_center)
+        omega_deriv = 2. * det_dist * sec_2omega * sec_2omega
+        dist_term = dist_err * dist_deriv
+        omega_term = omega_err * omega_deriv
+        return np.sqrt(dist_term * dist_term + omega_term * omega_term)
+
+    
+    def specular_z_fit(self, z_motor, max_counts, z_lo, z_hi, sigma_lo, sigma_hi):
+        return 0.5 * max_counts * (erf((z_motor - z_lo) / sigma_lo) - erf((z_motor - z_hi) / sigma_hi))
+    
+    def zero_angle(self, omega, omega0, det_dist):
+        return det_dist * np.tan(np.radians(omega - omega0)) + self.z0
+    
+    def yoneda(self, omega, omega0, det_dist, critical_angle):
+        return det_dist * np.tan(np.radians(omega - omega0 + critical_angle)) + self.z0
+    
+    def transmission(self, omega, omega0, det_dist, critical_angle):
+        alpha = np.radians(omega - omega0)
+        alpha_sq = alpha * alpha
+        critical_angle = np.radians(critical_angle)
+        crit_sq = critical_angle * critical_angle
+        refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
+        return self.z0 + det_dist * np.tan(alpha - np.sqrt(refraction_angle_sq))
+    
+    def exiting_refraction(self, omega, omega0, det_dist, critical_angle):
+        alpha = np.radians(omega - omega0)
+        alpha_sq = alpha * alpha
+        critical_angle = np.radians(critical_angle)
+        crit_sq = critical_angle * critical_angle
+        refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
+        return self.z0 + det_dist * np.tan(alpha + np.sqrt(refraction_angle_sq))
+    
 
 
 
@@ -231,173 +484,6 @@ class SpecularScanOld:
 
         self.process_data()
         self.fit()
-
-    def find_direct_beam_file_index(self):
-        possible_identifiers = ("db", "direct_beam")
-        for ii, file in enumerate(self.file_list):
-            if self.file_type == ".tif":
-                if "direct_beam" in file.name:
-                    return ii
-            elif fabio.open(file).header["Comment"].replace("Base - ", "").lower() in possible_identifiers:
-                return ii
-        print("Did not find a direct beam file")
-        return None
-    
-    def find_beam_center(self, direct_beam_index_file: int, x_pos="C", y_pos="L") -> tuple:
-        if x_pos not in ["L", "C", "R"] or y_pos not in ["U", "C", "L"]:
-            raise ValueError("x_pos must be 'L', 'C', or 'R', and y_pos must be 'U', 'C', or 'L'.")
-        intensity_db = self.load_image(self.file_list[direct_beam_index_file])
-        rows = self.detector.shape[0]
-        columns = self.detector.shape[1]
-        
-        if x_pos == "L":
-            x_pos = 0.25 * columns
-        elif x_pos == "C":
-            x_pos = 0.5 * columns
-        elif x_pos == "R":
-            x_pos = 0.75 * columns
-        if y_pos == "U":
-            y_pos = 0.25 * columns
-        elif y_pos == "C":
-            y_pos = 0.5 * columns
-        elif y_pos == "L":
-            y_pos = 0.75 * columns
-            
-        px_x = np.arange(columns)
-        db_x = np.sum(intensity_db, axis=0)
-        px_y = np.arange(rows)
-        db_y = np.sum(intensity_db, axis=1)
-        def gaussian(x, x0, sigma, amplitude):
-            arg = (x - x0) / sigma
-            return amplitude * np.exp(-0.5 * arg * arg)
-        (x0, sigma_x, a_x), _, = curve_fit(gaussian, px_x, db_x,
-                                           p0=(x_pos, 100, db_x.max()),
-                                           nan_policy="omit")
-        (y0, sigma_y, a_y), _ = curve_fit(gaussian, px_y, db_y,
-                                           p0=(y_pos, 100, db_y.max()),
-                                           nan_policy="omit")
-        beam_center = (y0, x0)
-        self.bc_sigma = abs(sigma_y * self.detector.get_pixel1() * 1e3)
-        print(self.bc_sigma)
-        self.bc_amp = a_y
-
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 7))
-        fig.delaxes(ax4)
-        fig.suptitle("Direct Beam", fontsize=12)
-
-        ax3.set_title("Horizontal beam profile")
-        ax3.scatter(px_x, db_x,
-                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
-        ax3.plot(px_x , gaussian(px_x, x0, sigma_x, a_x), "r")
-        ax3.set_xlim(beam_center[1] - 30, beam_center[1] + 30)
-        ax3.set_ylabel("Counts")
-        
-        ax2.set_title("Vertical beam profile")
-        ax2.scatter(db_y, px_y,
-                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
-        ax2.plot(gaussian(px_y, y0, sigma_y, a_y), px_y, "r")
-        ax2.set_ylim(beam_center[0] - 30, beam_center[0] + 30)
-        ax2.set_xlabel("Counts")
-        
-        for ax in (ax2, ax3):
-            ax.tick_params(axis='both', which='both', direction='in', right=True, top=True)
-            # ax.set_xlabel("$\\omega$ motor position $(\\degree)$", fontsize=12)
-            ax.grid(linestyle='dotted')
-            ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-            ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-
-        ax1.set_facecolor('k')
-        pos = ax1.imshow(intensity_db, norm=LogNorm(1, intensity_db.max()))
-        ax1.set_xlim(beam_center[1] - 30, beam_center[1] + 30)
-        ax1.set_ylim(beam_center[0] - 30, beam_center[0] + 30)
-        for ii in range(1, 6):
-            sig_x = ii * sigma_x
-            sig_y = ii * sigma_y
-            x = np.linspace(x0 - sig_x, x0 + sig_x, 1000)
-            y = sig_y * np.sqrt(1 - (x - x0) ** 2 / (sig_x * sig_x))
-            if ii < 3:
-                color = "r"
-            else:
-                color = "w"
-            ax1.plot(x, y + y0, color=color, linewidth=0.5)
-            ax1.plot(x, -y + y0, color=color, linewidth=0.5)
-        
-        ax1.axvline(x0, color='r', linewidth=0.5)
-        ax1.axhline(y0, color='r', linewidth=0.5)
-        fig.colorbar(pos, ax=ax1)
-        fig.tight_layout()
-        self.save_fig(fig)
-        return beam_center
-    
-    def load_image(self, filename: Path) -> np.ndarray:
-        file_data = fabio.open(filename).data
-        mask = self.base_mask.copy()
-        if file_data.dtype == np.uint32:
-            mask[np.where(file_data == self.MAX_INT)] = 0
-        file_data *= mask
-        return file_data
-    
-    def load_raw(self):
-        motor = np.empty(len(self.file_list))
-        intensity_data = np.empty((len(self.file_list), *self.detector.shape))
-        file_types = [""] * len(self.file_list)
-        for ii, file in enumerate(self.file_list):
-            if "om" in file.name:
-                file_types[ii] = "om"
-            elif "z" in file.name:
-                file_types[ii] = "z"
-            motor[ii] = self.get_angle(file)
-            intensity_data[ii] = self.load_image(file)
-        
-        self.type = max(set(file_types), key=file_types.count)
-        
-        sorting_args = np.argsort(motor)
-        motor = motor[sorting_args]
-        intensity_data = intensity_data[sorting_args]
-
-        return motor, intensity_data
-    
-    def get_angle(self, filename: Path) -> float:
-        if self.file_type == ".edf":
-            angle = fabio.open(filename).header["Comment"].replace("Base - ", "")
-        elif self.file_type == ".tif":
-            angle = self.angle_from_filename(filename.name)
-        return float(angle)
-
-    @staticmethod
-    def angle_from_filename(filename: str):
-        left_of_decimal = filename.split("_")[-3]
-        angle = float(left_of_decimal)
-        right_of_decimal = filename.split("_")[-2].replace(".tif", "")
-        if left_of_decimal[0] == "-":
-            angle -= float(right_of_decimal) / 10. ** len(right_of_decimal)
-        else:
-            angle += float(right_of_decimal) / 10. ** len(right_of_decimal)
-        angle = round(angle, 3)
-        return angle
-       
-    def process_data(self):
-        if self.beam_center is not None:
-            self.z -= (self.detector.shape[0] - self.beam_center[0]) * self.pixel_size
-            bc_z = round(self.beam_center[0])
-            z_lo = bc_z - self.pixels_above
-            z_hi = bc_z + self.pixels_below
-
-            self.z = self.z[z_lo:z_hi]
-
-            if self.beam_width is None:
-                data = self.intensity_data[:, z_lo:z_hi, :]
-            else:
-                half_width = 0.5 * self.beam_width / self.pixel_size
-                x_lo = round(self.beam_center[1] - half_width)
-                x_hi = round(self.beam_center[1] + half_width)
-                x_lo += self.pixel_horiontal_offset
-                x_hi += self.pixel_horiontal_offset
-                data = self.intensity_data[:, z_lo:z_hi, x_lo:x_hi]
-        else:
-            data = self.intensity_data
-        self.intensity_specular = np.sum(data, axis=2)
-        # print(self.intensity_specular.max())
 
     def fit(self, z0=None, max_angle=1, pixel_cut=None, standard_deviations=None):
         if self.type == "om":
@@ -854,7 +940,7 @@ class DirectBeam:
         self.double_result_y, _ = curve_fit(self.double_erf, self.y, self.counts_y,
                                             p0=(y0, sigma_y, sigma_y * 0.2, a_y), nan_policy="omit")
         self.center = (self.double_result_y[0], self.double_result_x[0])
-        self.width = (self.double_result_y[1], self.double_result_x[1])
+        self.width = (abs(self.double_result_y[1]), abs(self.double_result_x[1]))
 
     def plot_profile(self, ax, index, xrange):
         ax.scatter(self.x, self.counts_x,
@@ -984,11 +1070,11 @@ class DirectBeam:
 
     @classmethod
     def find_file_index(cls, file_list):
-        if WHERE_INFO == "title":
+        if WHERE_INFO.lower() == "title":
             for ii, file in enumerate(file_list):
                 if "direct_beam" in file.stem:
                     return ii
-        elif WHERE_INFO == "header":
+        elif WHERE_INFO.lower() == "header":
             for ii, file in enumerate(file_list):
                 if "direct_beam" in fabio.open(file).header["Comment"] or "direct beam" in fabio.open(file).header["Comment"]:
                     return ii
@@ -998,8 +1084,8 @@ class DirectBeam:
 
 if __name__ == "__main__":
     data_path = Path("tests/test-data/")
-    filename_om_db = data_path / "ex-om-scan/om_scan_direct_beam.tif"
-    filename_z_db = data_path / "ex-z-scan/z_scan_direct_beam.tif"
-    db1 = DirectBeam(filename_om_db)
-    db1.plot_quad()
+    om_path = data_path / "ex-om-scan"
+    z_path = data_path / "ex-z-scan"
+    spec = SpecularScan(om_path, .150)
+    spec.fit()
     plt.show()
