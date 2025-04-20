@@ -1,6 +1,47 @@
+[admin]
+data_path = "~/DATA"
+
+[align]
+info = "title"
+im_filetype = ".tif"
+unit = "mm"
+
+[align.beam_position]
+x = "center"
+y = "lower"
+
+[detector]
+name = "Eiger1M"
+bit_size = 32
+orientation = 2
+# Pixels to mask, these must be the same length
+# Give empty lists to not use
+[detector.bad_pixels]
+rows    = [681, 904, 398]
+columns = [646, 561, 579]
+# Corners of of 4x4 issue areas
+# Give empty lists to not use 
+[detector.issue_quads]
+start_rows    = [255, 808]
+start_columns = [255, 513, 771]
+
 [macro]
+horizontal_shutter = "umv s2hg 0.6"
+vertical_shutter = "umv s2vg 0.1"
 set_omega = "umv om {:.4f}\n"
 set_vertical = "umv z {:.4f}\n"
 move_beamstop = "umv wbs {:.4f}\n"
 move_vertical = "umvr z {:.4f}\n"
 expose = "eiger_run 0.1 {}.tif\n"
+beamstop = true
+
+[stitch]
+exposure_per_image = 0.5
+missing_band_rows = 37
+# Negative overlap means there is a gap
+image_overlap = 10
+compensate = true
+# File names will be f"{raw_label}{row}{separator}{column}{separator}{partial_exposure}{file_extension}"
+separator = "_"
+raw_label = ""
+file_extension = ""

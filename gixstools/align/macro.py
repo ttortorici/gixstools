@@ -1,15 +1,17 @@
 from datetime import datetime
 from pathlib import Path
-from gixstools.config import load as load_config
+from gixstools.config import load
 
 
-_config = load_config("macro")
+_config = load("macro")
 
 _set_om = _config["set_omega"]
 _set_vert = _config["set_vertical"]
 _move_bs = _config["move_beamstop"]
 _move_vert = _config["move_vertical"]
 _expose = _config["expose"]
+_vertical_shutter = _config["vertical_shutter"]
+_horizontal_shutter = _config["horizontal_shutter"]
 
 
 def create_om_macro(angles: list, directory: Path = Path.cwd(), tag: str = "", final: int = -4, beamstop=True) -> None:
@@ -27,9 +29,11 @@ def create_om_macro(angles: list, directory: Path = Path.cwd(), tag: str = "", f
     if tag:
         tag += "_"
     date = datetime.now()
-    macroname = f'Incident_angle_tuning_macro-{date.year:02d}{date.month:02d}{date.day:02d}-{date.hour:02d}.txt'
+    macroname = f'Specular_om_macro-{date.year:02d}{date.month:02d}{date.day:02d}-{date.hour:02d}.txt'
     print("Writing Macro...")
     with open(directory / macroname, 'w') as f:
+        f.write(_vertical_shutter)
+        f.write(_horizontal_shutter)
         if beamstop:
             f.write(_move_bs.format(5))  # move beam stop out of the way
 
@@ -45,18 +49,10 @@ def create_om_macro(angles: list, directory: Path = Path.cwd(), tag: str = "", f
         if beamstop:
             f.write(_move_bs.format(-5))
         f.write(_set_om.format(final))
-    num = len(angles) + 1
-    time_min = float(num) * 0.1
-    minutes = int(time_min)
-    seconds = round((time_min - minutes) * 60)
-    print(f"Macro written with {num} images. Estimated time (min:sec): {minutes}:{seconds:02d}")
-    print("Copy and paste the following into SAXS to run the macro:")
-    print("do " + (directory / macroname).as_posix())
-    print(f"WARNING: will leave om at {final} degrees")
-    return None
+    return macroname
 
 
-def create_z_macro(zs: list, directory: Path = Path.cwd(), tag: str = "", final: int = -5) -> None:
+def create_z_macro(zs: list, directory: Path = Path.cwd(), tag: str = "", final: int = -5, beamstop=True) -> None:
     """
     Create a macro file for scanning angle for GIWAXS
     :param zs: list of z-positions to scan through
@@ -74,8 +70,10 @@ def create_z_macro(zs: list, directory: Path = Path.cwd(), tag: str = "", final:
     macroname = f'Specular_z_macro-{date.year:02d}{date.month:02d}{date.day:02d}-{date.hour:02d}.txt'
     print("Writing Macro...")
     with open(directory / macroname, 'w') as f:
-        f.write(_move_bs.format(5))  # move beam stop out of the way
-
+        f.write(_vertical_shutter)
+        f.write(_horizontal_shutter)
+        if beamstop:
+            f.write(_move_bs.format(5))  # move beam stop out of the way
         for z in zs:
             f.write(_set_vert.format(z))
             formatted_angle = "{}_{}".format(*str(z).split("."))
@@ -83,19 +81,12 @@ def create_z_macro(zs: list, directory: Path = Path.cwd(), tag: str = "", final:
             f.write(_expose.format(img_name))
         f.write(_move_vert.format(final))
         f.write(_expose.format("z_scan_direct_beam"))  # take direct beam exposure
-        f.write(_move_bs.format(-5))
-    num = len(zs) + 1
-    time_min = float(num) * 0.1
-    minutes = int(time_min)
-    seconds = round((time_min - minutes) * 60)
-    print(f"Macro written with {num} images. Estimated time (min:sec): {minutes}:{seconds:02d}")
-    print("Copy and paste the following into SAXS to run the macro:")
-    print("do " + (directory / macroname).as_posix())
-    print(f"WARNING: will leave z at {final} mm")
-    return None  
+        if beamstop:
+            f.write(_move_bs.format(-5))
+    return macroname  
 
 
-def arange_list(start, finish, step):
+def create_list(start, finish, step):
     """
     Make a list of values similar to np.arange, but with values rounded to avoid floating point precision issues
     :param start: first element of the list

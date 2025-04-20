@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gixstools"
-version = "0.0.34"
+version = "0.0.72"
 description = "Python package to quickly transform images from grazing incidence X-ray experiments using C"
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [
@@ -22,24 +22,35 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 dependencies = [
-    "numpy>=1.7",
-    "pyFAI",
-    "fabio",
-    "matplotlib",
+    "numpy>=2.0",
+    "pyFAI>=2025.3",
+    "fabio>=2024",
+    "matplotlib>=3.10",
     "ipykernel",
-    "ipympl"
+    "ipympl",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 
 [project.scripts]
-gixpy-transform = "gixstools.programs:transform"
+transform = "gixstools._programs.transform:transform"
+scan-macro = "gixstools._programs.macro:scan_macro"
+new-config = "gixstools._programs.admin:new_config"
+clear-config = "gixstools._programs.admin:clear_config"
+new-user = "gixstools._programs.admin:new_user"
+save-config = "gixstools._programs.admin:save_config"
+load-config = "gixstools._programs.admin:load_config"
+move-scan = "gixstools._programs.admin:move_scan"
+clear-scan = "gixstools._programs.admin:clear_scan"
+
+
+# gixs-stitch = "gixstools._programs:stitch"
 
 [project.urls]
 Repository = "https://github.com/ttortorici/gixstools"
 Issues = "https://github.com/ttortorici/gixstools/issues"
 
 [tool.setuptools]
-packages = ["gixstools", "gixstools.wedge", "gixstools.align"]
+packages = ["gixstools", "gixstools.wedge", "gixstools.align", "gixstools.detector", "gixstools._programs"]
 include-package-data = true
 
 [tool.setuptools.package-data]

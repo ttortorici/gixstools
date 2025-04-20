@@ -28,5 +28,6 @@ if %errorlevel% neq 0 (
 )
 
 
-:: Step 3: Run the main.py script
-python tests\run_tests.py
+:: Step 4: Run the main.py script
+pip install -U nose2
+python -m nose2
