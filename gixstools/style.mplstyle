@@ -1,6 +1,9 @@
 mathtext.fontset: cm
 font.family: STIXGeneral
-font.size: 12
+font.size: 10
+axes.labelsize: 10
+axes.titlesize: 11
+figure.titlesize: 11
 xtick.top: True
 ytick.right: True
 xtick.direction: in
