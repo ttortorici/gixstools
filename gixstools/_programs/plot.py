@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from gixstools.align import SpecularScan
+from gixstools.align import SpatiallyResolvedScan
 import matplotlib.pylab as plt
 
 
@@ -46,7 +46,7 @@ def plot():
     if args.beamloc not in ["UL", "UC", "UR", "CL", "CC", "CR", "LR", "LC", "LL"]:
         raise ValueError("Beam locations options are: UL, UC, UR, CL, CC, CR, LR, LC, LL\nFor Upper, Center, Lower; Left, Center, Right.")
 
-    spec = SpecularScan(
+    spec = SpatiallyResolvedScan(
         directory,
         det_dist=args.distance,
         anglular_range=args.range,

@@ -26,7 +26,7 @@ elif UNIT == "um":
     UNIT_CONV = 1e6
 
 
-class SpecularScan:
+class SpatiallyResolvedScan:
 
     compressed_filename = "compressed_scan.npz"
     detector = Detector()
@@ -66,6 +66,7 @@ class SpecularScan:
         try:
             db_file = file_list[db_ind]
             self.direct_beam = DirectBeam(db_file)
+            self.direct_beam.find_center()
         except TypeError:
             pass
         data = np.load(self.directory / "compressed_scan.npz")
@@ -73,13 +74,14 @@ class SpecularScan:
         self.z_positions = data["z_positions"]
         self.intensity_specular = data["intensities"]
     
-    def load_raw(self):
+    def load_raw(self, zinger: bool = False):
         loader = RawLoader()
         file_list = list(self.directory.glob("*" + IM_TYPE))
         db_ind = DirectBeam.find_file_index(file_list)
         db_file = file_list[db_ind]
         del(file_list[db_ind])
-        self.direct_beam = DirectBeam(db_file)
+        self.direct_beam = DirectBeam(db_file, zinger=zinger)
+        self.direct_beam.find_center()
         self.beam_center = self.direct_beam.center[0] * self.detector.pixel1 * UNIT_CONV
         self.beam_width = self.direct_beam.width[0] * self.detector.pixel1 * UNIT_CONV
         motor = np.empty_like(file_list, dtype=np.float64)
@@ -222,15 +224,11 @@ class SpecularScan:
             motor_positions = self.motor_positions[mask]
         else:
             intensity_specular = self.intensity_specular
-            motor_positions = self.motor_positions[mask]
+            motor_positions = self.motor_positions
 
         max_ind = np.argmax(intensity_specular, axis=1)
         where_max_angle = motor_positions[max_ind]
         
-        # print(self.z_positions)
-        # print(self.z0)
-        # print(self.dist_guess * np.radians(max_angle) * UNIT_CONV + self.z0)
-        # Remove data below the beam center
         valid = np.where(np.logical_and(
             self.z_positions > self.z0,
             self.z_positions < self.dist_guess * np.radians(max_angle) * UNIT_CONV + self.z0
@@ -281,7 +279,7 @@ class SpecularScan:
             )
             self.popt["beam"], pcov = curve_fit(
                 self.occlusion_fit_single, self.motor_positions, counts,
-                p0=(self.counts.max(),
+                p0=(counts.max(),
                     0.5 * (self.motor_positions.min() + self.motor_positions.max()),
                     self.beam_width)
             )
@@ -316,7 +314,7 @@ class SpecularScan:
         except RuntimeError:
             print("Failed to fit specular counts")
         
-    def show_om_scan(self, style="quad", figsize=None, title=None, loc="upper left"):
+    def show_omega_scan(self, style="quad", figsize=None, title=None, loc="upper left"):
         style = style.lower()
         if style == "quad":
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
@@ -324,7 +322,7 @@ class SpecularScan:
             fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=figsize)
         if title is not None:
             fig.suptitle(title)
-        self.plot_specular_fit(ax1)
+        self.plot_omega_fit(ax1)
         if isinstance(loc, (list, tuple)):
             self.plot_trad_scan(ax2, "total", loc=loc[0])
             self.plot_trad_scan(ax3, "above", loc=loc[1])
@@ -339,7 +337,7 @@ class SpecularScan:
         elif "col" in style:
             return fig, (ax1, ax2, ax3, ax4)
 
-    def plot_specular_fit(self, ax):
+    def plot_omega_fit(self, ax):
         """FIT THROUGH MAX COUNT IN EACH ROW"""
         ax.scatter(self.where_max_angle, self.z_valid, s=10, marker='o',
                     edgecolors='k', lw=.75, facecolor='w')
@@ -352,6 +350,29 @@ class SpecularScan:
         ax.text(0.05, 0.93, annotation_text, transform=ax.transAxes,
                  verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
         ax.grid()
+
+    def show_z_scan(self, style="quad", figsize=None, title=None, loc="upper left"):
+        style = style.lower()
+        if style == "quad":
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
+        elif "col" in style:
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=figsize)
+        if title is not None:
+            fig.suptitle(title)
+        self.plot_specular_plot(ax1)
+        if isinstance(loc, (list, tuple)):
+            self.plot_trad_scan(ax2, "total", loc=loc[0])
+            self.plot_trad_scan(ax3, "above", loc=loc[1])
+            self.plot_trad_scan(ax4, "beam", loc=loc[2])
+        else:
+            self.plot_trad_scan(ax2, "total", loc=loc)
+            self.plot_trad_scan(ax3, "above", loc=loc)
+            self.plot_trad_scan(ax4, "beam", loc=loc)
+        fig.tight_layout()
+        if style == "quad":
+            return fig, ((ax1, ax2), (ax3, ax4))
+        elif "col" in style:
+            return fig, (ax1, ax2, ax3, ax4)
 
     def plot_trad_scan(self, ax, which: str = "total", loc="upper left"):
         loc_split = loc.split(" ")
@@ -422,26 +443,38 @@ class SpecularScan:
                 axis=0
             )
             title = "Counts in direct beam"
-        at_max = self.motor_positions[counts.argmax()]
-        annotation_text = f"max at $\\omega={at_max:.2f}\\degree$"
-        ax.text(text_x, text_y, annotation_text, transform=ax.transAxes,
-                verticalalignment=valign, horizontalalignment=halign,
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        ax.axvline(at_max, color="r", lw=.5)
         ax.scatter(self.motor_positions, counts, s=10, edgecolors='k', lw=.75, facecolor='w')
         ax.set_title(title)
         ax.grid()
         ax.set_ylabel("Counts")
         if self.type == "om":
             motor = "\\omega"
+            at_max = self.motor_positions[counts.argmax()]
+            annotation_text = f"max at $\\omega={at_max:.2f}\\degree$"
+            ax.text(text_x, text_y, annotation_text, transform=ax.transAxes,
+                    verticalalignment=valign, horizontalalignment=halign,
+                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+            ax.axvline(at_max, color="r", lw=.5)
         elif self.type == "z":
             func = {"total": self.occlusion_fit_single,
                     "beam": self.occlusion_fit_single,
                     "above": self.specular_z_fit}
+            if which == "above":
+                z0 = 0.5 * (self.popt[which][1] + self.popt[which][2])
+                dz0 = np.sqrt(self.perr[which][1] * self.perr[which][1] + self.perr[which][2] * self.perr[which][2])
+            else:
+                z0 = self.popt[which][1]
+                dz0 = self.perr[which][1]
+            # annotation_text = f"$z_0={z0:.3f}\pm{dz0:.3f}$ mm"
+            annotation_text = f"$z_0={z0:.2f}$ mm"
+            ax.text(text_x, text_y, annotation_text, transform=ax.transAxes,
+                    verticalalignment=valign, horizontalalignment=halign,
+                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
             motor = "z"
             x = np.linspace(self.motor_positions.min(), self.motor_positions.max(), 500)
             y = func[which](x, *self.popt[which])
             ax.plot(x, y, "r")
+
         ax.set_xlabel(f"${motor}$-motor position")
         if counts.max() > 1e4:
             ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
@@ -491,7 +524,7 @@ class SpecularScan:
         refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
         return self.z0 + det_dist * np.tan(alpha - np.sqrt(refraction_angle_sq))
     
-    def exiting_refraction_func(self, omega, omega0, det_dist, critical_angle):
+    def transmission_reflection_func(self, omega, omega0, det_dist, critical_angle):
         alpha = np.radians(omega - omega0)
         alpha_sq = alpha * alpha
         critical_angle = np.radians(critical_angle)
@@ -499,25 +532,25 @@ class SpecularScan:
         refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
         return self.z0 + det_dist * np.tan(alpha + np.sqrt(refraction_angle_sq))
     
-    def refraction_negative_func(self, omega, omega0, det_dist, critical_angle):
+    def refraction_exiting_func(self, omega, omega0, det_dist, critical_angle):
         alpha = np.radians(omega - omega0)
         critical_angle = np.radians(critical_angle)
         crit_sq = critical_angle * critical_angle
         refraction_angle = np.sqrt(alpha * alpha * (1 - 0.5 * crit_sq) + crit_sq)
         return self.z0 + det_dist * np.tan(alpha + refraction_angle)
     
-    def show_specular_plot(self, critical_angle=None, title=None, figsize=None):
+    def show_specular_plot(self, critical_angle=None, title=None, figsize=None, horizon=True, max_counts=None):
         fig, ax = plt.subplots(1, 1, figsize=figsize)
         if title is None:
             title = "Specular Plot"
-        color_map = self.plot_specular_plot(ax, critical_angle=critical_angle, title=title, horizon=True)
+        color_map = self.plot_specular_plot(ax, critical_angle=critical_angle, title=title, horizon=horizon, max_counts=max_counts)
         color_bar = fig.colorbar(color_map, ax=ax)
         color_bar.set_label("Counts per row")
         color_bar.ax.tick_params(which="both", direction="out")
         fig.tight_layout()
         return fig, ax
 
-    def plot_specular_plot(self, ax, critical_angle=None, title=None, horizon=False):
+    def plot_specular_plot(self, ax, critical_angle=None, title=None, horizon=False, max_counts=None):
         """SPECULAR"""
         ax.set_facecolor('k')
         if title is not None:
@@ -526,12 +559,16 @@ class SpecularScan:
         # z = np.arange(intensity_x_total.shape[1])[::-1] * self.pixel_size
         ax.set_ylabel(f"$z$ {UNIT}")
 
+        if max_counts is None:
+            max_counts = self.intensity_specular.max()
+
         color_map = ax.pcolormesh(self.motor_positions, self.z_positions, self.intensity_specular,
-                                  norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma")
+                                  norm=LogNorm(1, max_counts), cmap="plasma", rasterized=True)
         
-        ax.axhline(self.z0, linestyle="--", color="#FF5349", linewidth=0.7)
-        ax.axhline(self.beam_cut * self.beam_width,
-                   color="w", linewidth=0.5, linestyle="--")
+        if horizon:
+            ax.axhline(self.z0, linestyle="--", color="#FF5349", linewidth=0.7)
+            ax.axhline(self.beam_cut * self.beam_width,
+                       color="w", linewidth=0.5, linestyle="--")
         
         if self.type == "om":
             ax.axvline(self.omega0, linestyle="--", color="#FF5349", linewidth=0.7)
@@ -549,7 +586,7 @@ class SpecularScan:
                     if crit == last:
                         om_axis_crit_plus = np.linspace(self.omega0 + crit, self.omega0 + crit + .05, 100)
                         ax.plot(om_axis_crit_plus,
-                                self.exiting_refraction_func(om_axis_crit_plus, self.omega0, self.det_dist_fit, crit),
+                                self.transmission_reflection_func(om_axis_crit_plus, self.omega0, self.det_dist_fit, crit),
                                 "white", linewidth=1, alpha=0.5)
                     else:
                         ax.plot(om_axis_plus, self.yoneda_func(om_axis_plus, self.omega0, self.det_dist_fit, crit),
@@ -560,7 +597,7 @@ class SpecularScan:
                                 "white", linewidth=1, alpha=0.5)
                         om_axis_crit_minus = np.linspace(self.motor_positions.min(), self.omega0, 1000)
                         ax.plot(om_axis_crit_minus,
-                                self.refraction_negative_func(om_axis_crit_minus, self.omega0, self.det_dist_fit, crit),
+                                self.refraction_exiting_func(om_axis_crit_minus, self.omega0, self.det_dist_fit, crit),
                                 "white", linewidth=1, alpha=0.5)
                     last = crit
             ax.set_xlabel("$\\omega$-motor position $(\\degree)$")
@@ -568,498 +605,8 @@ class SpecularScan:
             ax.set_xlabel("$z$-motor position $(\\degree)$")
         ax.set_xlim(self.motor_positions.min(), self.motor_positions.max())
         ax.set_ylabel(f"$z$ ({UNIT})")
+        ax.tick_params(axis='both', which='both', color='white', labelcolor='black')
         return color_map
-
-    
-
-
-class SpecularScanOld:
-
-    def __init__(self, data_directory: Path, det_dist: float=150, anglular_range: float=1.5,
-                 beam_width: float=1, standard_deviations: float=4, data_remove: int = None,
-                 beam_location: str = "LC", plot_name: str = "", plot_dpi: int = None, plot_title: str = None):
-        self.plot_name = plot_name
-        if plot_dpi is None:
-            self.save_plots = False
-        else:
-            self.save_plots = True
-        self.data_remove = data_remove
-        self.beam_loc = beam_location.upper()
-        self.plot_title = plot_title
-        self.plot_dpi = plot_dpi
-        self.type = None
-        self.z0 = 0
-        self.det_dist=det_dist
-        self.beam_width = beam_width
-        self.data_directory = data_directory
-        self.instrument = None
-        self.detector = None
-        self.file_type = None
-        self.beam_center = None
-        self.bc_sigma = None
-        self.bc_amp = None
-        self.where_max_angle = None
-        self.perr = None
-        self.max_angle = None
-        self.standard_deviations = standard_deviations
-        self.z_specular = None
-        self.counts_total = None
-        self.success_total = False
-        self.success_dbeam = False
-        self.success_specz = False
-
-        self.file_list = list(data_directory.glob("*" + self.file_type))
-
-        self.pixel_size = self.detector.get_pixel1() * 1e3  # mm/pixel
-        self.pixels_above = int(det_dist * np.radians(anglular_range) / self.pixel_size)   # number of pixels above the beam to keep (for crop)
-        self.pixels_below = 8   # number of pixels below the beam to keep (for crop)
-        self.pixel_horiontal_offset = 0
-        self.z = np.arange(self.detector.shape[0])[::-1] * self.pixel_size
-        
-        self.base_mask = np.logical_not(self.detector.calc_mask())  # 1 keep, 0 mask (opposite of pyFAI standard, so it can be simply multiplied)
-
-        self.angles = None
-        self.z_motor = None
-        self.intensity_data = None
-        self.intensity_specular = None
-        self.run()
-
-    def save(self, directory: Path):
-        if self.type == "om":
-            data_to_save = {"angles": self.angles}
-        elif self.type == "z":
-            data_to_save = {"z_motor": self.z_motor}
-        else:
-            raise AttributeError("Has not determined type of specular scan.")
-        data_to_save["z_pos"] = self.z
-        data_to_save["specular_data"] = self.intensity_specular
-        np.savez(directory / "compressed_scan.npz", **data_to_save)
-    
-
-    def run(self):
-        direct_beam_file_index = self.find_direct_beam_file_index()
-
-        if direct_beam_file_index is None:
-            raise FileExistsError("Did not find a direct beam exposure")
-        x_pos = self.beam_loc[1]
-        y_pos = self.beam_loc[0]
-        self.beam_center = self.find_beam_center(direct_beam_file_index, x_pos, y_pos)
-        print("Direct beam is at ({}, {})".format(*self.beam_center))
-        del(self.file_list[direct_beam_file_index])
-        motor, self.intensity_data = self.load_raw()
-            
-        if self.type == "om":
-            self.angles = motor
-        elif self.type == "z":
-            self.z_motor = motor
-        else:
-            raise AttributeError("Scan type not established")
-
-        self.process_data()
-        self.fit()
-
-    def fit(self, z0=None, max_angle=1, pixel_cut=None, standard_deviations=None):
-        if self.type == "om":
-            self.fit_om(z0, max_angle, pixel_cut, standard_deviations)
-            
-            if self.data_remove:
-                self.refit_om()
-
-        elif self.type == "z":
-            self.fit_z(standard_deviations)
-        else:
-            raise AttributeError("Scan type was not established.")
-        
-    def refit_om(self):
-        difference = np.abs(self.z_valid - self.specular_om_fit(self.where_max_angle, self.omega0, self.det_dist_fit))
-        keep_inds = np.sort(np.argsort(difference)[:len(difference) - self.data_remove])
-        (self.omega0, self.det_dist_fit), pcov = curve_fit(self.specular_om_fit,
-                                                           self.where_max_angle[keep_inds],
-                                                           self.z_valid[keep_inds],
-                                                           p0=[0, self.det_dist_fit])
-        self.perr = np.sqrt(np.diag(pcov))
-        print("Fit results:")
-        print(f"    \u03C9\u2080 = ({self.omega0} \u00B1 {self.perr[0]})\u00B0")
-        print(f"    d\u209B = ({self.det_dist_fit} \u00B1 {self.perr[1]}) mm")
-
-
-    def fit_om(self, z0: float=None, max_angle: float=1, pixel_cut: int=None,
-               standard_deviations: float=None):
-        self.max_angle = max_angle
-        if z0 is not None:
-            self.z0 = z0
-        if standard_deviations is not None:
-            self.standard_deviations = standard_deviations
-
-        self.counts_total = np.sum(self.intensity_specular.T, axis=0)
-        self.counts_specular = np.sum(
-            self.intensity_specular.T[np.where(self.z > self.standard_deviations * self.bc_sigma)],
-            axis=0
-        )
-        self.counts_dbeam = np.sum(
-            self.intensity_specular.T[np.where(self.z < self.standard_deviations * self.bc_sigma)],
-            axis=0
-        )
-        
-        print(f"z\u2080 = {self.z0}")
-        max_ind = np.argmax(self.intensity_specular, axis=0)
-        where_max_angle = self.angles[max_ind]
-
-        # Remove data below the beam center
-        valid = np.where(np.logical_and(
-            self.z > self.z0,
-            self.z < self.det_dist * np.radians(max_angle) + self.z0
-            ))
-        self.z_valid = self.z[valid]
-        self.where_max_angle = where_max_angle[valid]
-        if pixel_cut is not None:
-            self.z_valid = self.z_valid[:-pixel_cut]
-            self.where_max_angle = self.where_max_angle[:-pixel_cut]
-        
-        (self.omega0, self.det_dist_fit), pcov = curve_fit(self.specular_om_fit, self.where_max_angle, self.z_valid, p0=[0, self.det_dist])
-        self.perr = np.sqrt(np.diag(pcov))
-        print("Fit results:")
-        print(f"    \u03C9\u2080 = ({self.omega0} \u00B1 {self.perr[0]})\u00B0")
-        print(f"    d\u209B = ({self.det_dist_fit} \u00B1 {self.perr[1]}) mm")
-
-    def fit_z(self, standard_deviations=None):
-        if standard_deviations is not None:
-            self.standard_deviations = standard_deviations
-        self.counts_total = np.sum(self.intensity_specular.T, axis=0)
-        self.counts_specular = np.sum(
-            self.intensity_specular.T[np.where(self.z > self.standard_deviations * self.bc_sigma)],
-            axis=0
-        )
-        self.counts_dbeam = np.sum(
-            self.intensity_specular.T[np.where(self.z < self.standard_deviations * self.bc_sigma)],
-            axis=0
-        )
-
-        print("Fit results:")
-        fit_names = ["max", "z\u2080", "\u03C3\u2080"]
-        unit_names = ["counts", "mm", "mm"]
-        try:
-            self.total_fit, pcov_total = curve_fit(self.occlusion_fit_single, self.z_motor, self.counts_total,
-                                                   # p0=(1e6, 0.5, self.bc_sigma))
-                                                   p0=(self.counts_total.max(), 0.5 * (self.z_motor.min() + self.z_motor.max()), self.bc_sigma))
-            self.perr_total = np.sqrt(np.diag(pcov_total))
-            print("  Total counts:")
-            for name, fit_res, err, unit in zip(fit_names, self.total_fit, self.perr_total, unit_names):
-                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
-            self.success_total = True
-        except RuntimeError:
-            print("Failed to fit total counts")
-            self.success_total = False
-
-        try:
-            self.dbeam_fit, pcov_dbeam = curve_fit(self.occlusion_fit_single, self.z_motor, self.counts_dbeam,
-                                                   # p0=(1e6, 0.5, self.bc_sigma)
-                                                   p0=(self.counts_dbeam.max(), 0.5 * (self.z_motor.min() + self.z_motor.max()), self.bc_sigma))
-            self.perr_dbeam = np.sqrt(np.diag(pcov_dbeam))
-            print("  Primary beam counts:")
-            for name, fit_res, err, unit in zip(fit_names, self.dbeam_fit, self.perr_dbeam, unit_names):
-                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
-            self.success_dbeam = True
-        except RuntimeError:
-            print("Failed to fit direct beam counts")
-            self.success_dbeam = False
-
-        try:
-            self.specz_fit, pcov_specz = curve_fit(self.specular_z_fit, self.z_motor, self.counts_specular,
-                                                   # p0=(1e5, .4, .7, 0.5 * self.bc_sigma, 0.5 * self.bc_sigma))
-                                                   p0=(self.counts_specular.max(), self.z_motor.min(), self.z_motor.max(), 0.5 * self.bc_sigma, 0.5 * self.bc_sigma))
-            self.perr_specz = np.sqrt(np.diag(pcov_specz))
-            fit_names = ["max", "z\u2081", "z\u2082", "\u03C3\u2081", "\u03C3\u2082"]
-            unit_names = ["counts", "counts", "mm", "mm", "mm", "mm"]
-            print("  Specular counts:")
-            for name, fit_res, err, unit in zip(fit_names, self.specz_fit, self.perr_specz, unit_names):
-                print(f"    {name} = ({fit_res:.5f} \u00B1 {err:.5f}) {unit}")
-            self.success_specz = True
-        except RuntimeError:
-            print("Failed to fit specular counts")
-            self.success_specz = False
-
-        self.plot()
-
-    def specular_om_fit(self, omega, omega0, det_dist):
-        return det_dist * np.tan(2. * np.radians(omega - omega0)) + self.z0
-    
-    def specular_om_fit2(self, omega, omega0, det_dist, radial_offset, rotation_offset):
-        alpha = np.radians(omega - omega0)
-        vertical_offset = radial_offset * (np.sin(rotation_offset + alpha) - np.sin(rotation_offset))
-        return (det_dist - radial_offset * np.cos(rotation_offset + alpha)) * np.tan(2. * alpha) + vertical_offset
-
-    
-    @staticmethod
-    def specular_om_error(omega, omega0, det_dist, omega_err, dist_err):
-        omega_center = omega - omega0
-        dist_deriv = np.tan(2. * omega_center)
-        sec_2omega = 1. / np.cos(2. * omega_center)
-        omega_deriv = 2. * det_dist * sec_2omega * sec_2omega
-        dist_term = dist_err * dist_deriv
-        omega_term = omega_err * omega_deriv
-        return np.sqrt(dist_term * dist_term + omega_term * omega_term)
-
-    
-    def specular_z_fit(self, z_motor, max_counts, z_lo, z_hi, sigma_lo, sigma_hi):
-        return 0.5 * max_counts * (erf((z_motor - z_lo) / sigma_lo) - erf((z_motor - z_hi) / sigma_hi))
-    
-    def zero_angle(self, omega, omega0, det_dist):
-        return det_dist * np.tan(np.radians(omega - omega0)) + self.z0
-    
-    def yoneda(self, omega, omega0, det_dist, critical_angle):
-        return det_dist * np.tan(np.radians(omega - omega0 + critical_angle)) + self.z0
-    
-    def transmission(self, omega, omega0, det_dist, critical_angle):
-        alpha = np.radians(omega - omega0)
-        alpha_sq = alpha * alpha
-        critical_angle = np.radians(critical_angle)
-        crit_sq = critical_angle * critical_angle
-        refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
-        return self.z0 + det_dist * np.tan(alpha - np.sqrt(refraction_angle_sq))
-    
-    def exiting_refraction(self, omega, omega0, det_dist, critical_angle):
-        alpha = np.radians(omega - omega0)
-        alpha_sq = alpha * alpha
-        critical_angle = np.radians(critical_angle)
-        crit_sq = critical_angle * critical_angle
-        refraction_angle_sq = (alpha_sq - crit_sq) / (1 - 0.5 * crit_sq)
-        return self.z0 + det_dist * np.tan(alpha + np.sqrt(refraction_angle_sq))
-    
-    def plot(self, title="", critical_angle=None, horizon=False, det_dist=None, omega0=None):
-        if self.type == "om":
-            self.plot_specular(title, critical_angle, horizon, det_dist, omega0)
-        elif self.type == "z":
-            self.plot_z()
-        else:
-            raise AttributeError("Type of specular not determined")
-        
-    def plot_om(self):
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 7))
-        if self.plot_title:
-            fig.suptitle(self.plot_title)
-
-        """FIT THROUGH MAX COUNT IN EACH ROW"""
-        ax1.scatter(self.where_max_angle, self.z_valid, s=10, marker='o',
-                    edgecolors='k', lw=.75, facecolor='w')
-        omega = np.linspace(self.where_max_angle[-1] - 0.02, self.where_max_angle[0] + 0.02, 100)
-        ax1.plot(omega, self.specular_om_fit(omega, self.omega0, self.det_dist_fit), "r")
-        
-        ax1.set_ylabel("$z$ (mm)", fontsize=12)
-        ax1.set_title("where max pixel occurs", fontsize=12)
-        # ax.legend(title="pixel")
-        annotation_text = f"$\\omega_0 = {self.omega0:.4f} \\pm {self.perr[0]:.4f}^\\circ$\n$d_{{sd}} = {self.det_dist_fit:.1f} \\pm {self.perr[1]:.1f}$ mm"
-        ax1.text(omega.min(), 0.95 * self.max_angle, annotation_text, transform=ax1.transAxes, fontsize=12,
-                 verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
-        
-        """TRADITIONAL OM SCAN"""
-        ax2.scatter(self.angles, self.counts_total,
-                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
-        ax2.set_title("Total Counts")
-
-        ax3.scatter(self.angles, self.counts_specular,
-                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
-        ax3.set_title("Counts above beam")
-
-        ax4.scatter(self.angles, self.counts_dbeam,
-                    s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
-        ax4.set_title("Counts in Direct Beam")
-        
-        for ax in (ax1, ax2, ax3, ax4):
-            ax.tick_params(axis='both', which='both', direction='in', right=True, top=True)
-            ax.set_xlabel("$\\omega$ motor position $(\\degree)$", fontsize=12)
-            ax.grid(linestyle='dotted')
-            ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-            ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-        for ax in (ax2, ax3, ax4):
-            ax.set_ylabel("Counts")
-        fig.tight_layout()
-        
-        self.save_fig(fig)
-
-    def plot_specular(self, title="", critical_angle=None, horizon=False, det_dist=None, omega0=None):
-        if det_dist is None:
-            det_dist = self.det_dist_fit
-        if omega0 is None:
-            omega0 = self.omega0
-
-        """SPECULAR"""
-
-        fig, ax = plt.subplots(1, 1, figsize=(10, 7))
-        ax.set_facecolor('k')
-        if self.plot_title:
-            fig.suptitle(self.plot_title)
-
-        # z = np.arange(intensity_x_total.shape[1])[::-1] * self.pixel_size
-        ax.set_ylabel("$z$ (mm)")
-
-        color_map = ax.pcolormesh(self.angles, self.z, self.intensity_specular.T,
-                                  norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma")
-        
-        ax.axhline(self.z0, linestyle="--", color="#FF5349", linewidth=0.7)
-        ax.axhline(self.standard_deviations * self.bc_sigma,
-                   color="w", linewidth=0.5, linestyle="--")
-
-        omega2 = np.linspace(omega0, omega0 + .75, 1000)
-        ax.plot(omega2, self.specular_om_fit(omega2, omega0, det_dist), "white", linewidth=1, alpha=0.5)
-        if horizon:
-            ax.plot(omega2, self.zero_angle(omega2, omega0, det_dist), "white", linewidth=1, alpha=0.5)
-        if critical_angle is not None:
-            if isinstance(critical_angle, float):
-                critical_angle = [critical_angle]
-            last = None
-            for crit in critical_angle:
-                if crit == last:
-                    omega1 = np.linspace(omega0 + crit, omega0 + crit + .05, 100)
-                    ax.plot(omega1, self.exiting_refraction(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
-                else:
-                    ax.plot(omega2, self.yoneda(omega2, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
-                    omega1 = np.linspace(omega0 + crit, self.angles[-1], 1000)
-                    ax.plot(omega1, self.transmission(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
-                    omega1 = np.linspace(self.angles[0], omega0 + crit, 1000)
-                    ax.plot(omega1, self.exiting_refraction(omega1, omega0, det_dist, crit), "white", linewidth=1, alpha=0.5)
-                    
-                    # spec_at = self.specular_fit(crit + self.omega0, self.omega0, self.det_dist_fit)
-                    # ax.plot([crit + self.omega0, crit + self.omega0], [spec_at + 0.6, spec_at + 1], "white", linewidth=.5, alpha=0.5)
-                last = crit
-        color_bar = fig.colorbar(color_map, ax=ax)
-        
-
-        ax.set_xlim(self.angles.min(), self.angles.max())
-
-        ax.set_xlabel("$\\omega\\ (\\degree)$")
-        ax.set_ylabel("$z$ (mm)")
-        ax.set_title(title)
-        fig.tight_layout()
-        self.save_fig(fig)
-        return fig, ax
-    
-    def plot_z(self, figsize=(10, 7)):
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
-        ax1.set_facecolor('k')
-        if self.plot_title:
-            fig.suptitle(self.plot_title, fontsize=12)
-
-        z_m_fit = np.linspace(self.z_motor.min(), self.z_motor.max(), 500)
-
-        annotation_texts = []
-        locs = []
-        fitted_axes = []
-
-        # z = np.arange(intensity_x_total.shape[1])[::-1] * self.pixel_size
-        ax1.set_ylabel("$z$ (mm)", fontsize=12)
-        ax1.set_ylabel("$z$-motor (mm)", fontsize=12)
-        #ax1.set_xticks(list(self.z_motor))
-        color_map = ax1.pcolormesh(self.z_motor, self.z, self.intensity_specular.T,
-                                   norm=LogNorm(1, self.intensity_specular.max()), cmap="plasma")
-        color_bar = fig.colorbar(color_map, ax=ax1)
-        ax1.axhline(self.standard_deviations * self.bc_sigma,
-                    color="w", linewidth=0.5)
-
-        # fig2, ax2 = plt.subplots(1, 1, figsize=(4, 3))
-        ax2.scatter(self.z_motor, self.counts_total,
-                   s=50,  # marker size
-                   marker="o",  # marker shape
-                   edgecolors="black",  # marker edge color
-                   lw=2,  # marker edge width
-                   alpha=1,  # transparency
-                   facecolor='w')
-        if self.success_total:
-            ax2.plot(z_m_fit, self.occlusion_fit_single(z_m_fit, *self.total_fit), "r")
-            annotation_texts.append(f"$z_0 = ({self.total_fit[1]:.3f} \\pm {self.perr_total[1]:.3f})$ mm")
-            locs.append("lower left")
-            fitted_axes.append(ax2)
-        ax2.set_title("Total", fontsize=12)
-
-        ax3.scatter(self.z_motor, self.counts_specular,
-                   s=50,  # marker size
-                   marker="o",  # marker shape
-                   edgecolors="black",  # marker edge color
-                   lw=2,  # marker edge width
-                   alpha=1,  # transparency
-                   facecolor='w')
-        if self.success_specz:
-            ax3.plot(z_m_fit, self.specular_z_fit(z_m_fit, *self.specz_fit), "r")
-            annotation_texts.append(f"$z_2 = ({self.specz_fit[1]:.3f} \\pm {self.perr_specz[1]:.3f})$ mm\n$z_1 = ({self.specz_fit[2]:.3f} \\pm {self.perr_specz[2]:.3f})$ mm\n$z_{{ave}}={0.5*(self.specz_fit[1]+self.specz_fit[2]):.3f}$ mm")
-            locs.append("lower center")
-            fitted_axes.append(ax3)
-        ax3.set_title("Above Beam", fontsize=12)
-        
-        ax4.scatter(self.z_motor, self.counts_dbeam,
-                   s=50,  # marker size
-                   marker="o",  # marker shape
-                   edgecolors="black",  # marker edge color
-                   lw=2,  # marker edge width
-                   alpha=1,  # transparency
-                   facecolor='w')
-        if self.success_dbeam:
-            ax4.plot(z_m_fit, self.occlusion_fit_single(z_m_fit, *self.dbeam_fit), "r")
-            annotation_texts.append(f"$z_0 = ({self.dbeam_fit[1]:.3f} \\pm {self.perr_dbeam[1]:.3f})$ mm")
-            locs.append("lower left")
-            fitted_axes.append(ax4)
-        ax4.set_title("Direct Beam", fontsize=12)
-        
-        for ax, ann, loc in zip(fitted_axes, annotation_texts, locs):
-            ax.tick_params(axis='both', which='both', direction='in', right=True, top=True)
-            ax.set_xlabel("$z$-motor (mm)", fontsize=12)
-            ax.set_ylabel("Counts", fontsize=12)
-            ax.grid(linestyle='dotted')
-            ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-            ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-            anchored_text = matplotlib.offsetbox.AnchoredText(ann, loc=loc, prop=dict(size=12), frameon=True)
-            anchored_text.patch.set_boxstyle("round,pad=0.5")
-            anchored_text.patch.set_facecolor('white')
-            anchored_text.patch.set_alpha(0.8)
-            ax.add_artist(anchored_text)
-        fig.suptitle("Specular z-scan")
-        fig.tight_layout()
-        self.save_fig(fig)
-        return fig, ((ax1, ax2), (ax3, ax4))
-    
-    def animate_tiffs(self, fps: float = 6.0, scale: float = 1):
-        scale *= 0.2
-        bc_z = round(self.beam_center[0])
-        z_lo = bc_z - self.pixels_above
-        z_hi = bc_z + self.pixels_below
-        self.z = self.z[z_lo:z_hi]
-        if self.beam_width is None:
-            data = self.intensity_data[:, z_lo:z_hi, :]
-        else:
-            half_width = 0.5 * self.beam_width / self.pixel_size
-            x_lo = round(self.beam_center[1] - half_width)
-            x_hi = round(self.beam_center[1] + half_width)
-            x_lo += self.pixel_horiontal_offset
-            x_hi += self.pixel_horiontal_offset
-            data = self.intensity_data[:, z_lo:z_hi, x_lo:x_hi]
-
-        fig, ax = plt.subplots(1, 1, figsize=(scale * (x_hi - x_lo), scale * 0.5 * (z_hi - z_lo)))
-        fig.tight_layout()
-        ax.set_facecolor("k")
-
-        frame_delay = 1000. / fps
-
-        im = ax.imshow(data[0], norm=LogNorm(1, data.max()))
-        cbar = fig.colorbar(im, ax=ax)
-
-        def _init():
-            im.set_data(data[0])
-            return im,
-
-        def _update(ii):
-            im.set_array(data[ii])
-            return im,
-
-        ani = FuncAnimation(fig, _update, frames=data.shape[0],
-                            init_func=_init, interval=frame_delay, blit=True)
-
-        return fig, ani
-
-    def occlusion_fit_single(self, z_motor, max_counts, z0, sigma):
-        return 0.5 * (max_counts - max_counts * erf((z_motor - z0) / sigma))
-
-    def occlusion_fit_double(self, z_motor, max_counts, z_lo, z_hi, sigma_lo, sigma_hi):
-        return 0.5 * max_counts * (erf((z_motor - z_hi) / sigma_hi) - erf((z_motor - z_lo) / sigma_lo)) + max_counts
-
 
 
 
@@ -1077,7 +624,7 @@ class DirectBeam:
 
     detector = Detector()
 
-    def __init__(self, filename: Path):
+    def __init__(self, filename: Path, zinger: bool = False):
         """
         Initializes the DirectBeam instance by loading and processing the direct beam image.
 
@@ -1085,7 +632,11 @@ class DirectBeam:
             filename (Path): The path to the direct beam image file.
         """
         image = fabio.open(filename).data
-        mask = self.detector.calc_mask()
+        
+        if zinger:
+            mask = self.detector.calc_mask_dezinger(image)
+        else:
+            mask = self.detector.calc_mask()
         mask[image == self.detector.MAX_INT] = 1
 
         self.data = image * np.logical_not(mask)
@@ -1097,8 +648,6 @@ class DirectBeam:
         self.center = None
         self.width = None
         self.amplitude = None
-        
-        self.find_center()
     
     def find_center(self) -> tuple:
         x_pos, y_pos = self.find_start_guess(self.x.max(), self.y.max())
@@ -1111,10 +660,16 @@ class DirectBeam:
         (y0, sigma_y, a_y), _ = curve_fit(self.gaussian, self.y, self.counts_y,
                                            p0=(y_pos, 100, self.counts_y.max()),
                                            nan_policy="omit")
-        self.double_result_y, _ = curve_fit(self.double_erf, self.y, self.counts_y,
-                                            p0=(y0, sigma_y, sigma_y * 0.2, a_y), nan_policy="omit")
-        self.center = (self.double_result_y[0], self.double_result_x[0])
-        self.width = (abs(self.double_result_y[1]), abs(self.double_result_x[1]))
+        try:
+            self.double_result_y, _ = curve_fit(self.double_erf, self.y, self.counts_y,
+                                                p0=(y0, sigma_y, sigma_y * 0.2, a_y), nan_policy="omit")
+            self.center = (self.double_result_y[0], self.double_result_x[0])
+            self.width = (abs(self.double_result_y[1]), abs(self.double_result_x[1]))
+        except RuntimeError:
+            self.double_result_y = (y0, sigma_y, a_y)
+            self.center = (y0, self.double_result_x[0])
+            self.width = (abs(sigma_y) * 2. * np.sqrt(2. * np.log(2.)), abs(self.double_result_x[1]))
+        
 
     def plot_profile(self, ax, index, xrange):
         ax.scatter(self.x, self.counts_x,
@@ -1148,7 +703,10 @@ class DirectBeam:
             y = self.y
             y_fit = np.linspace(self.center[0] - yrange, self.center[0] + yrange, 1000)
             x = self.counts_y
-            x_fit = self.double_erf(y_fit, *self.double_result_y)
+            if len(self.double_result_y) == 4:
+                x_fit = self.double_erf(y_fit, *self.double_result_y)
+            elif len(self.double_result_y) == 3:
+                x_fit = self.gaussian(y_fit, *self.double_result_y)
             ax.set_ylim(self.center[0] - yrange, self.center[0] + yrange)
             if self.counts_y.max() > 1e4:
                 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
@@ -1157,7 +715,10 @@ class DirectBeam:
             x = self.y
             x_fit = np.linspace(self.center[0] - yrange, self.center[0] + yrange, 1000)
             y = self.counts_y
-            y_fit = self.double_erf(x_fit, *self.double_result_y)
+            if len(self.double_result_y) == 4:
+                y_fit = self.double_erf(x_fit, *self.double_result_y)
+            elif len(self.double_result_y) == 3:
+                y_fit = self.gaussian(y_fit, *self.double_result_y)
             ax.set_ylabel("Counts")
             ax.set_xlabel("row")
             ax.set_xlim(self.center[0] - yrange, self.center[0] + yrange)
@@ -1219,8 +780,15 @@ class DirectBeam:
         fig.colorbar(pos, ax=ax)
         fig.tight_layout()
         return fig, ax
-
     
+    def show_raw_beam(self, figsize=(3.37, 2.75)):
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+        ax.set_facecolor('k')
+        pos = ax.imshow(self.data, norm=LogNorm(1, self.data.max()))
+        fig.colorbar(pos, ax=ax)
+        fig.tight_layout()
+        return fig, ax
+
     @staticmethod
     def find_start_guess(width: float, height: float):
         if BEAM_POS["x"] not in ["L", "left", "C", "center", "R", "right"]:
@@ -1266,11 +834,18 @@ class DirectBeam:
     
 
 if __name__ == "__main__":
-    data_path = Path("tests/test-data/")
-    om_path = data_path / "ex-om-scan"
-    z_path = data_path / "ex-z-scan"
-    spec = SpecularScan(om_path, .150)
-    spec.fit()
-    spec.show_om_scan()
-    spec.show_specular_plot([.24, .19, .19])
+    # data_path = Path("tests/test-data/")
+    # om_path = data_path / "ex-om-scan"
+    # z_path = data_path / "ex-z-scan"
+    # spec = SpatiallyResolvedScan(om_path, .150)
+    # spec.fit()
+    # spec.show_omega_scan()
+    # spec.show_specular_plot([.24, .19, .19])
+    # plt.show()
+    data_path = Path(r"C:\Users\Teddy\OneDrive - UCB-O365\Rogerslab3\Teddy\XRD\GI-scans\2024-11-09\2024-11-09_om-scan_at-557-um-2")
+    data_path = Path(r"C:\Users\Teddy\OneDrive - UCB-O365\Rogerslab3\Teddy\XRD\GI-scans\2024-10-25 variable det-dist - sio2\2024-10-25_om-scan_at-573-um-2")
+    file = data_path / "om_scan_direct_beam.tif"
+    db = DirectBeam(file)
+    db.find_center()
+    db.plot_quad()
     plt.show()

@@ -53,10 +53,14 @@ class Detector(DetectorFromConfig):
                 mask[row_start_quad:(row_start_quad + 4), col_start_quad:(col_start_quad + 4)] = 1
         return mask
     
-    @classmethod
-    def calc_mask_dezinger(cls, image: np.ndarray, cut_off: float=None,
+    def calc_mask_and_outliers(self, image: np.ndarray, threshold: float = 100) -> np.ndarray:
+        mask = self.calc_mask()
+        outliers = self.find_outliers(image, threshold)
+        return np.logical_and(mask, outliers)
+    
+    def calc_mask_dezinger(self, image: np.ndarray, cut_off: float=None,
                            gaussian_standard_deviation: float=None) -> np.ndarray:
-        return np.logical_or(cls.find_zingers(image, cut_off, gaussian_standard_deviation), cls.calc_mask())
+        return np.logical_or(self.find_zingers(image, cut_off, gaussian_standard_deviation), self.calc_mask())
     
     @classmethod
     def get_size(cls) -> tuple:
@@ -71,6 +75,17 @@ class Detector(DetectorFromConfig):
         return cls.COLS
     
     @staticmethod
+    def find_outliers(image: np.ndarray, threshold: int):
+        kernel = np.array([[1, 1, 1],
+                           [1, 0, 1],
+                           [1, 1, 1]])
+        neighbor_sums = ndimage.convolve(image, kernel, mode='constant', cval=0)
+        above_mask = image > threshold
+        low_neighbor_sum = neighbor_sums < 3
+        outliers = np.logical_and(above_mask, low_neighbor_sum)
+        return outliers
+    
+    @staticmethod
     def find_zingers(image: np.ndarray, cut_off: float=5, gaussian_standard_deviation: float=2) -> np.ndarray:
         """
         Finds abnormally hot pixels by applying a gaussian filter to smooth the image and locate pixels and returns a mask for them
@@ -80,9 +95,9 @@ class Detector(DetectorFromConfig):
         :return: return mask of zinger locations
         """
         if cut_off is None:
-            cut_off = 5.
+            cut_off = 1000.
         if gaussian_standard_deviation is None:
-            gaussian_standard_deviation = 2.
+            gaussian_standard_deviation = .5
         smoothed_img = ndimage.gaussian_filter(image, gaussian_standard_deviation)
         dif_img = image - smoothed_img
 
