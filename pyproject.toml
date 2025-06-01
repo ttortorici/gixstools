@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gixstools"
-version = "0.0.144"
+version = "0.0.152"
 description = "Python package to quickly transform images from grazing incidence X-ray experiments using C"
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [

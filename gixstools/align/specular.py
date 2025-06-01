@@ -1,4 +1,4 @@
-import matplotlib.offsetbox
+from matplotlib.axes._axes import Axes
 import numpy as np
 import fabio
 import re
@@ -8,8 +8,8 @@ from scipy.optimize import curve_fit, root_scalar
 from scipy.special import erf
 from pathlib import Path
 import matplotlib.pylab as plt
-from matplotlib.colors import LogNorm
-from matplotlib.animation import FuncAnimation
+from matplotlib.colors import LogNorm, LinearSegmentedColormap
+# from matplotlib.animation import FuncAnimation
 import matplotlib.ticker as ticker
 plt.style.use("gixstools.style")
 
@@ -24,6 +24,12 @@ elif UNIT == "mm":
     UNIT_CONV = 1e3
 elif UNIT == "um":
     UNIT_CONV = 1e6
+
+cmap = cmap = LinearSegmentedColormap.from_list("my_cmap", [
+    "#2C0066", "#830B87", "#0031B8", "#3DCEDA", "#00FF0D", "#207800",
+    #"#E0D900",
+    "#C86B00", "#EB0800", "#FF5CEC", "#FFFF75", "#FFFFFF"
+]) # 'terrain' # 'gist_ncar' # 'nipy_spectral'
 
 
 class SpatiallyResolvedScan:
@@ -40,7 +46,7 @@ class SpatiallyResolvedScan:
         self.type = None
         self.motor_positions = None
         self.z_positions = None
-        self.intensity_specular = None
+        self.intensity_srs = None
         self.all_images = None
         self.direct_beam = None
 
@@ -72,7 +78,7 @@ class SpatiallyResolvedScan:
         data = np.load(self.directory / "compressed_scan.npz")
         self.motor_positions = data["motor_positions"]
         self.z_positions = data["z_positions"]
-        self.intensity_specular = data["intensities"]
+        self.intensity_srs = data["intensities"]
     
     def load_raw(self, zinger: bool = False):
         loader = RawLoader()
@@ -115,7 +121,7 @@ class SpatiallyResolvedScan:
 
         self.all_images = raw_data[:, crop_above:crop_below, crop_left:crop_right]
         
-        self.intensity_specular = np.sum(self.all_images, axis=2).T
+        self.intensity_srs = np.sum(self.all_images, axis=2).T
 
     def show_crops(self, image_indices: list, figsize: tuple = None):
         pos = [None] * len(image_indices)
@@ -135,12 +141,12 @@ class SpatiallyResolvedScan:
             fig.suptitle("$z$-motor position", y=.9)
         return fig, axes
 
-    def plot_crop(self, ax: matplotlib.axes._axes.Axes, im_ind: int, max_value: float = None):
+    def plot_crop(self, ax: Axes, im_ind: int, max_value: float = None):
         ax.set_facecolor("k")
         image = self.all_images[im_ind]
         if max_value is None:
             max_value = image.max()
-        pos = ax.imshow(image, norm=LogNorm(1, max_value), aspect='equal')
+        pos = ax.imshow(image, norm=LogNorm(1, max_value), aspect='equal', cmap=cmap)
         motor_position = self.motor_positions[im_ind]
         if self.type == "om":
             title = f"${motor_position:.2f}\\degree$"
@@ -184,7 +190,7 @@ class SpatiallyResolvedScan:
         data = {
             "motor_positions": self.motor_positions,
             "z_positions": self.z_positions,
-            "intensities": self.intensity_specular
+            "intensities": self.intensity_srs
         }
         np.savez_compressed(self.directory / self.compressed_filename, **data)
 
@@ -220,13 +226,13 @@ class SpatiallyResolvedScan:
             else:
                 mask = np.logical_and(self.motor_positions > motor_range[0],
                                       self.motor_positions < motor_range[1])
-            intensity_specular = self.intensity_specular[:, mask]
+            intensity_srs = self.intensity_srs[:, mask]
             motor_positions = self.motor_positions[mask]
         else:
-            intensity_specular = self.intensity_specular
+            intensity_srs = self.intensity_srs
             motor_positions = self.motor_positions
 
-        max_ind = np.argmax(intensity_specular, axis=1)
+        max_ind = np.argmax(intensity_srs, axis=1)
         where_max_angle = motor_positions[max_ind]
         
         valid = np.where(np.logical_and(
@@ -239,7 +245,7 @@ class SpatiallyResolvedScan:
             self.z_valid = self.z_valid[:-pixel_cut]
             self.where_max_angle = self.where_max_angle[:-pixel_cut]
         
-        self.popt, pcov = curve_fit(self.specular_om_fit, self.where_max_angle, self.z_valid, p0=[0, self.dist_guess])
+        self.popt, pcov = curve_fit(self.srs_om_fit, self.where_max_angle, self.z_valid, p0=[0, self.dist_guess])
         self.omega0, self.det_dist_fit = self.popt
         self.perr = np.sqrt(np.diag(pcov))
         print("Fit results:")
@@ -258,7 +264,7 @@ class SpatiallyResolvedScan:
         self.perr = {"total": None, "above": None, "beam": None}
 
         try:
-            counts = np.sum(self.intensity_specular, axis=0)
+            counts = np.sum(self.intensity_srs, axis=0)
             self.popt["total"], pcov = curve_fit(
                 self.occlusion_fit_single, self.motor_positions, counts,
                 p0=(counts.max(),
@@ -274,7 +280,7 @@ class SpatiallyResolvedScan:
 
         try:
             counts = np.sum(
-                self.intensity_specular[np.where(self.z_positions < self.beam_width * self.beam_cut)],
+                self.intensity_srs[np.where(self.z_positions < self.beam_width * self.beam_cut)],
                 axis=0
             )
             self.popt["beam"], pcov = curve_fit(
@@ -293,11 +299,11 @@ class SpatiallyResolvedScan:
 
         try:
             counts = np.sum(
-                self.intensity_specular[np.where(self.z_positions > self.beam_width * self.beam_cut)],
+                self.intensity_srs[np.where(self.z_positions > self.beam_width * self.beam_cut)],
                 axis=0
             )
             self.popt["above"], pcov = curve_fit(
-                self.specular_z_fit, self.motor_positions, counts,
+                self.srs_z_fit, self.motor_positions, counts,
                 p0=(counts.max(),
                     self.motor_positions.min(),
                     self.motor_positions.max(),
@@ -342,7 +348,7 @@ class SpatiallyResolvedScan:
         ax.scatter(self.where_max_angle, self.z_valid, s=10, marker='o',
                     edgecolors='k', lw=.75, facecolor='w')
         omega = np.linspace(self.where_max_angle[-1] - 0.02, self.where_max_angle[0] + 0.02, 100)
-        ax.plot(omega, self.specular_om_fit(omega, self.omega0, self.det_dist_fit), "r")
+        ax.plot(omega, self.srs_om_fit(omega, self.omega0, self.det_dist_fit), "r")
         ax.set_xlabel("$\\omega$-motor position")
         ax.set_ylabel("$z$ (mm)")
         ax.set_title("What row brightest pixel occurs")
@@ -359,7 +365,7 @@ class SpatiallyResolvedScan:
             fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=figsize)
         if title is not None:
             fig.suptitle(title)
-        self.plot_specular_plot(ax1)
+        self.plot_srs_plot(ax1)
         if isinstance(loc, (list, tuple)):
             self.plot_trad_scan(ax2, "total", loc=loc[0])
             self.plot_trad_scan(ax3, "above", loc=loc[1])
@@ -429,17 +435,17 @@ class SpatiallyResolvedScan:
                 raise ValueError("Invalid text location")
         which = which.lower()
         if which == "total":
-            counts = np.sum(self.intensity_specular, axis=0)
+            counts = np.sum(self.intensity_srs, axis=0)
             title = "Total Counts"
         elif "spec" in which or which == "above":
             counts = np.sum(
-                self.intensity_specular[np.where(self.z_positions > self.beam_width * self.beam_cut)],
+                self.intensity_srs[np.where(self.z_positions > self.beam_width * self.beam_cut)],
                 axis=0
             )
             title = "Counts above beam"
         elif "beam" in which or which == "below":
             counts = np.sum(
-                self.intensity_specular[np.where(self.z_positions < self.beam_width * self.beam_cut)],
+                self.intensity_srs[np.where(self.z_positions < self.beam_width * self.beam_cut)],
                 axis=0
             )
             title = "Counts in direct beam"
@@ -458,7 +464,7 @@ class SpatiallyResolvedScan:
         elif self.type == "z":
             func = {"total": self.occlusion_fit_single,
                     "beam": self.occlusion_fit_single,
-                    "above": self.specular_z_fit}
+                    "above": self.srs_z_fit}
             if which == "above":
                 z0 = 0.5 * (self.popt[which][1] + self.popt[which][2])
                 dz0 = np.sqrt(self.perr[which][1] * self.perr[which][1] + self.perr[which][2] * self.perr[which][2])
@@ -480,16 +486,16 @@ class SpatiallyResolvedScan:
             ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
             ax.set_ylabel("Counts per column $(\\times 1000)$")
 
-    def specular_om_fit(self, omega, omega0, det_dist):
+    def srs_om_fit(self, omega, omega0, det_dist):
         return det_dist * np.tan(2. * np.radians(omega - omega0)) + self.z0
     
-    def specular_om_fit2(self, omega, omega0, det_dist, radial_offset, rotation_offset):
+    def srs_om_fit2(self, omega, omega0, det_dist, radial_offset, rotation_offset):
         alpha = np.radians(omega - omega0)
         vertical_offset = radial_offset * (np.sin(rotation_offset + alpha) - np.sin(rotation_offset))
         return (det_dist - radial_offset * np.cos(rotation_offset + alpha)) * np.tan(2. * alpha) + vertical_offset
 
     @staticmethod
-    def specular_om_error(omega, omega0, det_dist, omega_err, dist_err):
+    def srs_om_error(omega, omega0, det_dist, omega_err, dist_err):
         omega_center = omega - omega0
         dist_deriv = np.tan(2. * omega_center)
         sec_2omega = 1. / np.cos(2. * omega_center)
@@ -507,7 +513,7 @@ class SpatiallyResolvedScan:
         return 0.5 * max_counts * (erf((z_motor - z_hi) / sigma_hi) - erf((z_motor - z_lo) / sigma_lo)) + max_counts
     
     @staticmethod
-    def specular_z_fit(z_motor, max_counts, z_lo, z_hi, sigma_lo, sigma_hi):
+    def srs_z_fit(z_motor, max_counts, z_lo, z_hi, sigma_lo, sigma_hi):
         return 0.5 * max_counts * (erf((z_motor - z_lo) / sigma_lo) - erf((z_motor - z_hi) / sigma_hi))
     
     def horizon_func(self, omega, omega0, det_dist):
@@ -539,18 +545,21 @@ class SpatiallyResolvedScan:
         refraction_angle = np.sqrt(alpha * alpha * (1 - 0.5 * crit_sq) + crit_sq)
         return self.z0 + det_dist * np.tan(alpha + refraction_angle)
     
-    def show_specular_plot(self, critical_angle=None, title=None, figsize=None, horizon=True, max_counts=None):
+    def show_srs_plot(self, critical_angle=None, title=None, figsize=None, horizon=True, max_counts=None):
         fig, ax = plt.subplots(1, 1, figsize=figsize)
         if title is None:
-            title = "Specular Plot"
-        color_map = self.plot_specular_plot(ax, critical_angle=critical_angle, title=title, horizon=horizon, max_counts=max_counts)
+            if self.type == "om":
+                title = "SRS-$\\omega$"
+            else:
+                title = "SRS-$z$"
+        color_map = self.plot_srs_plot(ax, critical_angle=critical_angle, title=title, horizon=horizon, max_counts=max_counts)
         color_bar = fig.colorbar(color_map, ax=ax)
         color_bar.set_label("Counts per row")
         color_bar.ax.tick_params(which="both", direction="out")
         fig.tight_layout()
         return fig, ax
 
-    def plot_specular_plot(self, ax, critical_angle=None, title=None, horizon=False, max_counts=None):
+    def plot_srs_plot(self, ax, critical_angle=None, title=None, horizon=False, max_counts=None):
         """SPECULAR"""
         ax.set_facecolor('k')
         if title is not None:
@@ -560,9 +569,9 @@ class SpatiallyResolvedScan:
         ax.set_ylabel(f"$z$ {UNIT}")
 
         if max_counts is None:
-            max_counts = self.intensity_specular.max()
+            max_counts = self.intensity_srs.max()
 
-        color_map = ax.pcolormesh(self.motor_positions, self.z_positions, self.intensity_specular,
+        color_map = ax.pcolormesh(self.motor_positions, self.z_positions, self.intensity_srs,
                                   norm=LogNorm(1, max_counts), cmap="plasma", rasterized=True)
         
         if horizon:
@@ -573,7 +582,7 @@ class SpatiallyResolvedScan:
         if self.type == "om":
             ax.axvline(self.omega0, linestyle="--", color="#FF5349", linewidth=0.7)
             om_axis_plus = np.linspace(self.omega0, self.omega0 + .75, 1000)
-            ax.plot(om_axis_plus, self.specular_om_fit(om_axis_plus, self.omega0, self.det_dist_fit),
+            ax.plot(om_axis_plus, self.srs_om_fit(om_axis_plus, self.omega0, self.det_dist_fit),
                     "white", linewidth=1, alpha=0.5)
             if horizon:
                 ax.plot(om_axis_plus, self.horizon_func(om_axis_plus, self.omega0, self.det_dist_fit),
@@ -602,7 +611,7 @@ class SpatiallyResolvedScan:
                     last = crit
             ax.set_xlabel("$\\omega$-motor position $(\\degree)$")
         elif self.type == "z":
-            ax.set_xlabel("$z$-motor position $(\\degree)$")
+            ax.set_xlabel(f"$z$-motor position $({UNIT})$")
         ax.set_xlim(self.motor_positions.min(), self.motor_positions.max())
         ax.set_ylabel(f"$z$ ({UNIT})")
         ax.tick_params(axis='both', which='both', color='white', labelcolor='black')
@@ -731,7 +740,7 @@ class DirectBeam:
 
     def plot_beam(self, ax):
         ax.set_facecolor('k')
-        pos = ax.imshow(self.data, norm=LogNorm(1, self.data.max()))
+        pos = ax.imshow(self.data, norm=LogNorm(1, self.data.max()), cmap=cmap)
         xyrange = int(self.width[1] * 1.5)
         ax.set_xlim(self.center[1] - xyrange, self.center[1] + xyrange)
         ax.set_ylim(self.center[0] + xyrange, self.center[0] - xyrange)
@@ -784,7 +793,7 @@ class DirectBeam:
     def show_raw_beam(self, figsize=(3.37, 2.75)):
         fig, ax = plt.subplots(1, 1, figsize=figsize)
         ax.set_facecolor('k')
-        pos = ax.imshow(self.data, norm=LogNorm(1, self.data.max()))
+        pos = ax.imshow(self.data, norm=LogNorm(1, self.data.max()), cmap=cmap)
         fig.colorbar(pos, ax=ax)
         fig.tight_layout()
         return fig, ax
