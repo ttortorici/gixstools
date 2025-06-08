@@ -14,7 +14,8 @@ Functions
 
 Macros for *spec* :cite:`spec` can be generated with
 ``gixstools.align.create_z_macro`` and ``gixstools.align.create_om_macro``.
-These can then be called in *spec* to perform a spatially resolved scan :cite:`align`.
+These can then be called in *spec* to perform a spatially
+resolved scan :cite:`align`.
 
 .. bibliography::
-    :style: plain
+    :style: alpha
