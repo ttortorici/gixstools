@@ -1,10 +1,9 @@
 Welcome to Lumache's documentation!
 ===================================
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
+**GIXStools** (/jɪks-tuːlz/) is a Python library for assisting in
+grazing incidence X-ray scattering (GIXS) experiments and data analysis.
+It consists of three modules :doc:`Align`, :doc:`Detector`, and :doc:`Wedge`.
 
 Check out the :doc:`usage` section for further information, including
 how to :ref:`installation` the project.
