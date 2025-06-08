@@ -1,7 +1,7 @@
 Align
 =====
 
-.. autosummary::
-   :toctree: generated
+Alignment calibration is a critical step for GIXS experiments :cite:`mythesis`.
 
-   gixstools
+.. bibliography::
+    :style: plain

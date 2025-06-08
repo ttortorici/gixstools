@@ -17,7 +17,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
 ]
+
+bibtex_bibfiles = ['references.bib']
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
