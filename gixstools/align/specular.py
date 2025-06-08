@@ -323,7 +323,7 @@ class SpatiallyResolvedScan:
     def show_omega_scan(self, style="quad", figsize=None, title=None, loc="upper left"):
         style = style.lower()
         if style == "quad":
-            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
+            fig, ((ax1, ax3), (ax2, ax4)) = plt.subplots(2, 2, figsize=figsize)
         elif "col" in style:
             fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=figsize)
         if title is not None:
@@ -353,8 +353,8 @@ class SpatiallyResolvedScan:
         ax.set_ylabel("$z$ (mm)")
         ax.set_title("What row brightest pixel occurs")
         annotation_text = f"$\\omega_0 = {self.omega0:.4f} \\pm {self.perr[0]:.4f}^\\circ$\n$d_{{sd}} = {self.det_dist_fit:.1f} \\pm {self.perr[1]:.1f}$ mm"
-        ax.text(0.05, 0.93, annotation_text, transform=ax.transAxes,
-                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
+        ax.text(0.95, 0.07, annotation_text, transform=ax.transAxes, horizontalalignment="right",
+                 verticalalignment='bottom', bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
         ax.grid()
 
     def show_z_scan(self, style="quad", figsize=None, title=None, loc="upper left"):
@@ -389,47 +389,47 @@ class SpatiallyResolvedScan:
                 text_y = 0.5
                 valign = "center"
             elif loc == "left":
-                text_x = 0.05
+                text_x = 0.04
                 halign = "left"
                 text_y = 0.5
                 valign = "center"
             elif loc == "right":
-                text_x = 0.95
+                text_x = 0.96
                 halign = "right"
                 text_y = 0.5
                 valign = "center"
             elif loc == "upper" or loc == "top":
                 text_x = 0.5
                 halign = "center"
-                text_y = 0.93
+                text_y = 0.92
                 valign = "top"
             elif loc == "lower" or loc == "bottom":
                 text_x = 0.5
                 halign = "center"
-                text_y = 0.07
+                text_y = 0.08
                 valign = "bottom"
             else:
                 raise ValueError("Invalid text location")
         else:
             if loc_split[0] == "upper" or loc_split[0] == "top":
-                text_y = 0.93
+                text_y = 0.92
                 valign = "top"
             elif loc_split[0] == "center" or loc_split[0] == "middle":
                 text_y = 0.5
                 valign = "center"
             elif loc_split[0] == "lower" or loc_split[0] == "bottom":
-                text_y = 0.07
+                text_y = 0.08
                 valign = "bottom"
             else:
                 raise ValueError("Invalid text location")
             if loc_split[1] == "right":
-                text_x = 0.95
+                text_x = 0.96
                 halign = "right"
             elif loc_split[1] == "center" or loc_split[1] == "middle":
                 text_x = 0.5
                 halign = "center"
             elif loc_split[1] == "left":
-                text_x = 0.05
+                text_x = 0.04
                 halign = "left"
             else:
                 raise ValueError("Invalid text location")
@@ -484,7 +484,7 @@ class SpatiallyResolvedScan:
         ax.set_xlabel(f"${motor}$-motor position")
         if counts.max() > 1e4:
             ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
-            ax.set_ylabel("Counts per column $(\\times 1000)$")
+            ax.set_ylabel("kilocounts")
 
     def srs_om_fit(self, omega, omega0, det_dist):
         return det_dist * np.tan(2. * np.radians(omega - omega0)) + self.z0
@@ -700,7 +700,7 @@ class DirectBeam:
         ax.set_ylabel("Counts")
         if self.counts_x.max() > 1e4:
             ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
-            ax.set_ylabel("Counts per column $(\\times 1000)$")
+            ax.set_ylabel("kilocounts per column")
         ax.grid()
 
     def plot_vertical_profile(self, ax, flip=True):
@@ -719,7 +719,7 @@ class DirectBeam:
             ax.set_ylim(self.center[0] - yrange, self.center[0] + yrange)
             if self.counts_y.max() > 1e4:
                 ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
-                ax.set_xlabel("Counts per column $(\\times 1000)$")
+                ax.set_xlabel("kilocounts per row")
         else:
             x = self.y
             x_fit = np.linspace(self.center[0] - yrange, self.center[0] + yrange, 1000)
@@ -733,7 +733,7 @@ class DirectBeam:
             ax.set_xlim(self.center[0] - yrange, self.center[0] + yrange)
             if self.counts_y.max() > 1e4:
                 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1000:.0f}'))
-                ax.set_ylabel("Counts per column $(\\times 1000)$")
+                ax.set_ylabel("kilocounts per row")
         ax.scatter(x, y, s=10, marker='o', edgecolors='k', lw=.75, facecolor='w')
         ax.plot(x_fit , y_fit, "r")
         ax.grid()
@@ -752,10 +752,10 @@ class DirectBeam:
         top = (self.center[1] - 0.5 * np.array([-self.width[1], self.width[1]]), self.center[0] + 0.5 * np.ones(2) * self.width[0])
         bottom = (self.center[1] - 0.5 * np.array([-self.width[1], self.width[1]]), self.center[0] - 0.5 * np.ones(2) * self.width[0])
         lw = 0.5
-        ax.plot(*left, "r", lw=lw)
-        ax.plot(*right, "r", lw=lw)
-        ax.plot(*top, "r", lw=lw)
-        ax.plot(*bottom, "r", lw=lw)
+        ax.plot(*left, "k", lw=lw)
+        ax.plot(*right, "k", lw=lw)
+        ax.plot(*top, "k", lw=lw)
+        ax.plot(*bottom, "k", lw=lw)
         return pos
         
     def plot_quad(self, figsize=None):

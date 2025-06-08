@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Tortorici"
+    given-names: "Edward"
+    orcid: "https://orcid.org/0009-0002-4891-594X"
+title: "gixstools"
+version: 2.7.1
+date-released: 2025-06-11
+url: "https://github.com/ttortorici/gixstools
