@@ -5,29 +5,19 @@ Create a virtual environment
 ----------------
 
 To use GIXStools, it is highly recommended to create
-a virtual environment. This can be done in two ways
+a virtual environment for Python 3.13. This can be done with
+Anaconda or venv. For example:
 
 .. code-block:: console
 
-   (.venv) $ pip install lumache
+   python -m venv ~\Documents\venvs\gixs
 
-Creating recipes
+Install GIXStools
 ----------------
 
-To retrieve a list of random ingredients,
-you can use the ``lumache.get_random_ingredients()`` function:
+With your virtual environment activated:
 
-.. autofunction:: lumache.get_random_ingredients
+.. code-block:: console
 
-The ``kind`` parameter should be either ``"meat"``, ``"fish"``,
-or ``"veggies"``. Otherwise, :py:func:`lumache.get_random_ingredients`
-will raise an exception.
-
-.. autoexception:: lumache.InvalidKindError
-
-For example:
-
->>> import lumache
->>> lumache.get_random_ingredients()
-['shells', 'gorgonzola', 'parsley']
+   (.venv) pip install gixstools
 
