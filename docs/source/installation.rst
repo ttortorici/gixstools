@@ -1,12 +1,11 @@
-Usage
+Installation
 =====
 
-.. _installation:
+Create a virtual environment
+----------------
 
-Installation
-------------
-
-To use Lumache, first install it using pip:
+To use GIXStools, it is highly recommended to create
+a virtual environment. This can be done in two ways
 
 .. code-block:: console
 

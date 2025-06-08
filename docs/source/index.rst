@@ -1,12 +1,11 @@
-Welcome to Lumache's documentation!
+Welcome to Grazing Incidence X-ray Scattering Tools (GIXStools) documentation!
 ===================================
 
 **GIXStools** (/jɪks-tuːlz/) is a Python library for assisting in
 grazing incidence X-ray scattering (GIXS) experiments and data analysis.
 It consists of three modules :doc:`Align`, :doc:`Detector`, and :doc:`Wedge`.
 
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+Check out :doc:`installation` for setting up your environment.
 
 .. note::
 
@@ -17,5 +16,8 @@ Contents
 
 .. toctree::
 
-   usage
-   api
+   installation
+   align
+   detector
+   wedge
+
