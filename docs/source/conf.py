@@ -18,7 +18,15 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.bibtex',
+    'sphinx.ext.napoleon',
 ]
+
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': False,
+    'show-inheritance': True,
+}
+autosummary_generate = True
 
 bibtex_bibfiles = ['references.bib']
 
