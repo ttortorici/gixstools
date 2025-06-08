@@ -1,6 +1,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../gixstools'))
+sys.path.insert(0, os.path.abspath('../../gixstools.align'))
+sys.path.insert(0, os.path.abspath('../../gixstools.wedge'))
+sys.path.insert(0, os.path.abspath('../../gixstools.detector'))
 
 # Configuration file for the Sphinx documentation builder.
 
