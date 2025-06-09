@@ -17,10 +17,11 @@ Macros for *spec* :cite:`spec` can be generated with
 These can then be called in *spec* to perform a spatially
 resolved scan :cite:`align`.
 
-.. automodule:: gixstools.align
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. currentmodule:: gixstools.align
+
+.. autofunction:: create_z_macro
+.. autofunction:: create_om_macro
 
 .. bibliography::
     :style: plain
