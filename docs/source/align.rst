@@ -29,4 +29,4 @@ resolved scan :cite:`align`.
     :show-inheritance:
 
 .. bibliography::
-    :style: alpha
+    :style: plain

@@ -16,10 +16,24 @@ _horizontal_shutter = _config["horizontal_shutter"]
 
 def create_om_macro(angles: list, directory: Path = Path.cwd(), tag: str = "", final: int = -4, beamstop=True) -> None:
     """
-    Create a macro file for scanning angle for GIWAXS
-    :param angles: list of angles to scan through
-    :param tag: optional identifier to put in filename
-    :return: None
+    Create a macro file for scanning angle for GIWAXS.
+
+    Parameters
+    ----------
+    angles : list
+        List of angles to scan through.
+    directory : Path, optional
+        Directory where the macro file will be saved.
+    tag : str, optional
+        Optional identifier to include in the filename.
+    final : int, optional
+        Final value for the scan (used in file naming or processing).
+    beamstop : bool, optional
+        Whether to use a beamstop during scan.
+
+    Returns
+    -------
+    None
     """
     if isinstance(directory, str):
         directory = Path(directory)
@@ -54,10 +68,24 @@ def create_om_macro(angles: list, directory: Path = Path.cwd(), tag: str = "", f
 
 def create_z_macro(zs: list, directory: Path = Path.cwd(), tag: str = "", final: int = -5, beamstop=True) -> None:
     """
-    Create a macro file for scanning angle for GIWAXS
-    :param zs: list of z-positions to scan through
-    :param tag: optional identifier to put in filename
-    :return: None
+    Create a macro file for scanning Z-position for GIWAXS.
+
+    Parameters
+    ----------
+    zs : list
+        List of Z-positions to scan through.
+    directory : Path, optional
+        Directory where the macro file will be saved. Defaults to current working directory.
+    tag : str, optional
+        Optional identifier to include in the filename.
+    final : int, optional
+        Final value for the scan (used for e.g. returning to a rest position). Default is -5.
+    beamstop : bool, optional
+        Whether to include a beamstop command in the macro.
+
+    Returns
+    -------
+    None
     """
     if isinstance(directory, str):
         directory = Path(directory)
