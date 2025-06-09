@@ -15,9 +15,11 @@ Contents
 --------
 
 .. toctree::
+   :maxdepth: 2
 
    installation
    align
+   gixstools.align
    detector
    wedge
 
