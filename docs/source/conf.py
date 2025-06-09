@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-gixspath = Path(__file__).resolve().parents[2]#  / 'gixstools'
+gixspath = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(gixspath))
 
 # Configuration file for the Sphinx documentation builder.
