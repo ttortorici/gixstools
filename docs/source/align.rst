@@ -17,12 +17,6 @@ Macros for *spec* :cite:`spec` can be generated with
 These can then be called in *spec* to perform a spatially
 resolved scan :cite:`align`.
 
-.. autosummary::
-   :toctree: _autosummary
-   :recursive:
-
-   gixstools.align
-
 .. automodule:: gixstools.align
     :members:
     :undoc-members:
