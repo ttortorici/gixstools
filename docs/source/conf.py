@@ -5,7 +5,26 @@ from unittest.mock import MagicMock
 gixspath = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(gixspath))
 
-# Mock the config module
+# Mock the required modules
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+# List of packages to mock
+MOCK_MODULES = [
+    'numpy',
+    'matplotlib',
+    'matplotlib.pyplot',
+    'pyFAI',
+    'fabio',
+    'gixstools.config'
+]
+
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
+
+# Mock config with specific return values
 class MockConfig:
     def load(self, subdict=None, path=None):
         return {
