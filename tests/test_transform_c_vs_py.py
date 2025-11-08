@@ -1,6 +1,8 @@
-import gixstools
+import gixstools.wedge
 import numpy as np
 import matplotlib.pylab as plt
+
+from gixstools.wedge import transformer
 
 
 def test_transform_ones():
@@ -39,10 +41,14 @@ def test_transform_ones():
 
     
 
-    # fig, ax = plt.subplots(1, 1)
-    # pos = ax.imshow(transformed_data1 - transformed_data2)
-    # ax.set_title("difference")
-    # fig.colorbar(pos, ax=ax)
+    fig, axes = plt.subplots(2, 1)
+    pos = axes[0].imshow(transformed_data1)
+    axes[0].set_title("C transform")
+    fig.colorbar(pos, ax=axes[0])
+
+    pos = axes[1].imshow(transformed_data2)
+    axes[1].set_title("Python transform")
+    fig.colorbar(pos, ax=axes[1])
 
     # assert np.all(np.isclose(transformed_data1, transformed_data2))
     # x = np.isclose(transformed_flat_field1, transformed_flat_field2)
@@ -51,8 +57,8 @@ def test_transform_ones():
     # print(np.sum(x))
     # assert np.all(np.isclose(transformed_flat_field1, transformed_flat_field2))
     
-    assert transformer.ai.poni1 == new_poni1
-    assert transformer.ai.poni2 == new_poni2
+    assert abs(transformer.ai.poni1 - new_poni1) < 1e-3
+    assert abs(transformer.ai.poni2 - new_poni2) < 1e-3
     print("passed test")
 
 

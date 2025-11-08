@@ -1,7 +1,8 @@
-import gixstools
-import gixstools.align
 from pathlib import Path
 from datetime import datetime
+
+import gixstools
+import gixstools.align
 
 
 def test_macro():
@@ -20,14 +21,18 @@ def test_macro():
     specular_format = str(dump_folder / "Specular_om_macro-{}.txt")
     new_file = Path(specular_format.format(date_stamp))
     with open(specular_format.format("master"), "r") as master, open(new_file, "r") as test:
-        assert master.read() == test.read()
+        master_text = master.read()
+        test_text = test.read()
+        assert master_text == test_text
     new_file.unlink()
     print(" - omega-scan macro written successfully")
 
     specular_format = str(dump_folder / "Specular_z_macro-{}.txt")
     new_file = Path(specular_format.format(date_stamp))
     with open(specular_format.format("master"), "r") as master, open(new_file, "r") as test:
-        assert master.read() == test.read()
+        master_text = master.read()
+        test_text = test.read()
+        assert master_text == test_text
     new_file.unlink()
     print(" - z-scan macro written successfully")
     

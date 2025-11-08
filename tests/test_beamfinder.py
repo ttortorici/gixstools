@@ -1,20 +1,21 @@
-from unittest import TestCase
-from gixstools.align import DirectBeam
 from pathlib import Path
 import matplotlib.pylab as plt
 
+from gixstools.align import DirectBeam
 
-class TestBeamFinder(TestCase):
-    def test_beam_finder(self):
-        data_path = Path("tests/test-data/")
-        filename_om_db = data_path / "ex-om-scan/om_scan_direct_beam.tif"
-        filename_z_db = data_path / "ex-z-scan/z_scan_direct_beam.tif"
-        db1 = DirectBeam(filename_om_db)
-        db1.show_beam()
 
+def test_beam_finder():
+    data_path = Path("tests/test-data/")
+    filename_om_db = data_path / "ex-om-scan/om_scan_direct_beam.tif"
+    filename_z_db = data_path / "ex-z-scan/z_scan_direct_beam.tif"
+    assert filename_om_db.exists()
+    assert filename_z_db.exists()
+    db1 = DirectBeam(filename_om_db)
+    db1.find_center()
+    db1.show_beam()
+    plt.show()
 
 
 if __name__ == "__main__":
-    from unittest import main
-    main()
-    plt.show()
+    test_beam_finder()
+    # plt.show()

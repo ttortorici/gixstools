@@ -133,6 +133,7 @@ class SpatiallyResolvedScan:
             pos[ii] = self.plot_crop(ax, ind, max_value)
         cb = fig.colorbar(pos[-1], ax=axes.ravel().tolist(), fraction=0.0315, pad=.05, anchor=(1000,.5))
         cb.ax.tick_params(which="both", direction="out")
+        cb.ax.set_ylabel("Counts")
         if self.type == "om":
             # axes[int(len(image_indices) * 0.5)].set_title("$\\omega$-motor position")
             fig.suptitle("$\\omega$-motor position", y=0.9)
@@ -146,6 +147,7 @@ class SpatiallyResolvedScan:
         image = self.all_images[im_ind]
         if max_value is None:
             max_value = image.max()
+        print("Crop size: ({}, {})".format(*image.shape))
         pos = ax.imshow(image, norm=LogNorm(1, max_value), aspect='equal', cmap=cmap)
         motor_position = self.motor_positions[im_ind]
         if self.type == "om":
@@ -770,6 +772,7 @@ class DirectBeam:
         
         cb = fig.colorbar(pos, ax=ax1)
         cb.ax.tick_params(which="both", direction="out")
+        cb.ax.set_ylabel("counts")
         fig.tight_layout()
         return fig, ((ax1, ax2), (ax3, ax4))
     

@@ -610,3 +610,135 @@ Rot1: 0
 Rot2: 0
 Rot3: 0
 Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:49:00 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:49:28 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:50:29 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:51:33 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:53:08 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:53:52 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:54:24 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 10:56:02 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 11:10:26 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 11:12:27 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Sat Nov  8 11:15:51 2025
+poni_version: 2.1
+Detector: Detector
+Detector_config: {"pixel1": 0.001, "pixel2": 0.001, "max_shape": [97, 133], "orientation": 2}
+Distance: 0.15
+Poni1: 0.0024946078485181575
+Poni2: 0.027986197820933464
+Rot1: 0
+Rot2: 0
+Rot3: 0
+Wavelength: 1.54185e-10
