@@ -49,6 +49,29 @@ if isinstance(sys.modules.get('numpy'), Mock):
 # If other modules need simple attributes we can add them below, but avoid
 # mocking gixstools.* so autodoc reads real docstrings.
 
+# Ensure important local subpackages are importable by Sphinx/autosummary.
+# In some RTD environments the installed package may shadow the source or
+# package import machinery may fail; if import fails, load the subpackage
+# directly from the repository source into sys.modules.
+import importlib
+import importlib.util
+
+def _ensure_local_package(module_name: str, rel_dir: str):
+    try:
+        importlib.import_module(module_name)
+        return
+    except Exception:
+        pkg_init = Path(__file__).resolve().parents[2] / rel_dir / "__init__.py"
+        if pkg_init.is_file():
+            spec = importlib.util.spec_from_file_location(module_name, str(pkg_init))
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+
+# Try to make `gixstools.align` and `gixstools.detector` available from source
+_ensure_local_package('gixstools.align', 'gixstools/align')
+_ensure_local_package('gixstools.detector', 'gixstools/detector')
+
 # -- Project information
 
 project = 'Grazing Incidence X-ray Scattering Tools'
