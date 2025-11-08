@@ -1,7 +1,25 @@
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
+
 gixspath = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(gixspath))
+
+# Mock the config module
+class MockConfig:
+    def load(self, subdict=None, path=None):
+        return {
+            "horizontal_shutter": "umv s2hg 0.6",
+            "vertical_shutter": "umv s2vg 0.1",
+            "set_omega": "umv om {:.4f}\n",
+            "set_vertical": "umv z {:.4f}\n",
+            "move_beamstop": "umv wbs {:.4f}\n",
+            "move_vertical": "umvr z {:.4f}\n",
+            "expose": "eiger_run 0.1 {}.tif\n",
+            "beamstop": True
+        }
+
+sys.modules['gixstools.config'] = MockConfig()
 
 # Configuration file for the Sphinx documentation builder.
 

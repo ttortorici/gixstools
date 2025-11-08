@@ -1,5 +1,7 @@
 from . import wedge
 from . import align
+from . import config
+from . import detector
 from . import _programs
 
 # if False:  # or use an env var like `if os.environ.get("SPHINX_BUILD")`
