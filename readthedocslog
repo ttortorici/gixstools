@@ -1,22 +1,22 @@
 Read the Docs build information
-Build id: 30249179
+Build id: 30249199
 Project: gixstools
 Version: latest
-Commit: 984ec022751552b36cb0ff0297454f96d1dd70d9
-Date: 2025-11-08T19:33:09.750277Z
+Commit: 341acbf2a5c11223cf96dcb2b35124055288e259
+Date: 2025-11-08T19:40:15.661631Z
 State: finished
 Success: False
 
 
-[rtd-command-info] start-time: 2025-11-08T19:33:10.225532Z, end-time: 2025-11-08T19:33:12.267057Z, duration: 2, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:16.124241Z, end-time: 2025-11-08T19:40:18.107581Z, duration: 1, exit-code: 0
 git clone --depth 1 https://github.com/ttortorici/gixstools.git .
 Cloning into '.'...
 
-[rtd-command-info] start-time: 2025-11-08T19:33:12.316174Z, end-time: 2025-11-08T19:33:12.567229Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:18.144348Z, end-time: 2025-11-08T19:40:18.412754Z, duration: 0, exit-code: 0
 git fetch origin --force --prune --prune-tags --depth 50 refs/heads/main:refs/remotes/origin/main
 
 
-[rtd-command-info] start-time: 2025-11-08T19:33:12.650530Z, end-time: 2025-11-08T19:33:13.362217Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:18.486074Z, end-time: 2025-11-08T19:40:18.825423Z, duration: 0, exit-code: 0
 git checkout --force origin/main
 Note: switching to 'origin/main'.
 
@@ -35,9 +35,9 @@ Or undo this operation with:
 
 Turn off this advice by setting config variable advice.detachedHead to false
 
-HEAD is now at 984ec02 readthedocs
+HEAD is now at 341acbf readthedocs
 
-[rtd-command-info] start-time: 2025-11-08T19:33:13.400389Z, end-time: 2025-11-08T19:33:13.437469Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:18.891442Z, end-time: 2025-11-08T19:40:18.927996Z, duration: 0, exit-code: 0
 cat .readthedocs.yaml
 version: "2"
 
@@ -55,28 +55,28 @@ python:
 sphinx:
   configuration: docs/source/conf.py
 
-[rtd-command-info] start-time: 2025-11-08T19:33:19.414904Z, end-time: 2025-11-08T19:33:19.467350Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:24.940605Z, end-time: 2025-11-08T19:40:24.993336Z, duration: 0, exit-code: 0
 asdf global python 3.13.3
 
 
-[rtd-command-info] start-time: 2025-11-08T19:33:19.805869Z, end-time: 2025-11-08T19:33:20.566732Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:25.335221Z, end-time: 2025-11-08T19:40:26.004227Z, duration: 0, exit-code: 0
 python -mvirtualenv $READTHEDOCS_VIRTUALENV_PATH
-created virtual environment CPython3.13.3.final.0-64 in 483ms
+created virtual environment CPython3.13.3.final.0-64 in 415ms
   creator CPython3Posix(dest=/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest, clear=False, no_vcs_ignore=False, global=False)
   seeder FromAppData(download=False, pip=bundle, setuptools=bundle, wheel=bundle, via=copy, app_data_dir=/home/docs/.local/share/virtualenv)
     added seed packages: pip==23.1, setuptools==67.6.1, wheel==0.40.0
   activators BashActivator,CShellActivator,FishActivator,NushellActivator,PowerShellActivator,PythonActivator
 
-[rtd-command-info] start-time: 2025-11-08T19:33:20.616185Z, end-time: 2025-11-08T19:33:25.667797Z, duration: 5, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:26.050702Z, end-time: 2025-11-08T19:40:31.165660Z, duration: 5, exit-code: 0
 python -m pip install --upgrade --no-cache-dir pip setuptools
 Requirement already satisfied: pip in /home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages (23.1)
 Collecting pip
   Downloading pip-25.3-py3-none-any.whl (1.8 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 15.8 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 30.4 MB/s eta 0:00:00
 Requirement already satisfied: setuptools in /home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages (67.6.1)
 Collecting setuptools
   Downloading setuptools-80.9.0-py3-none-any.whl (1.2 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 28.1 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 395.5 MB/s eta 0:00:00
 Installing collected packages: setuptools, pip
   Attempting uninstall: setuptools
     Found existing installation: setuptools 67.6.1
@@ -88,7 +88,7 @@ Installing collected packages: setuptools, pip
       Successfully uninstalled pip-23.1
 Successfully installed pip-25.3 setuptools-80.9.0
 
-[rtd-command-info] start-time: 2025-11-08T19:33:25.711393Z, end-time: 2025-11-08T19:33:29.914943Z, duration: 4, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:31.213423Z, end-time: 2025-11-08T19:40:35.517065Z, duration: 4, exit-code: 0
 python -m pip install --upgrade --no-cache-dir sphinx
 Collecting sphinx
   Downloading sphinx-8.2.3-py3-none-any.whl.metadata (7.0 kB)
@@ -135,18 +135,18 @@ Collecting urllib3<3,>=1.21.1 (from requests>=2.30.0->sphinx)
 Collecting certifi>=2017.4.17 (from requests>=2.30.0->sphinx)
   Downloading certifi-2025.10.5-py3-none-any.whl.metadata (2.5 kB)
 Downloading sphinx-8.2.3-py3-none-any.whl (3.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 125.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 109.0 MB/s  0:00:00
 Downloading docutils-0.21.2-py3-none-any.whl (587 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.4/587.4 kB 420.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.4/587.4 kB 655.0 MB/s  0:00:00
 Downloading alabaster-1.0.0-py3-none-any.whl (13 kB)
 Downloading babel-2.17.0-py3-none-any.whl (10.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 328.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 381.7 MB/s  0:00:00
 Downloading imagesize-1.4.1-py2.py3-none-any.whl (8.8 kB)
 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
 Downloading markupsafe-3.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
 Downloading packaging-25.0-py3-none-any.whl (66 kB)
 Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 689.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 667.7 MB/s  0:00:00
 Downloading requests-2.32.5-py3-none-any.whl (64 kB)
 Downloading charset_normalizer-3.4.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (153 kB)
 Downloading idna-3.11-py3-none-any.whl (71 kB)
@@ -164,7 +164,7 @@ Installing collected packages: urllib3, sphinxcontrib-serializinghtml, sphinxcon
 
 Successfully installed Jinja2-3.1.6 MarkupSafe-3.0.3 Pygments-2.19.2 alabaster-1.0.0 babel-2.17.0 certifi-2025.10.5 charset_normalizer-3.4.4 docutils-0.21.2 idna-3.11 imagesize-1.4.1 packaging-25.0 requests-2.32.5 roman-numerals-py-3.1.0 snowballstemmer-3.0.1 sphinx-8.2.3 sphinxcontrib-applehelp-2.0.0 sphinxcontrib-devhelp-2.0.0 sphinxcontrib-htmlhelp-2.1.0 sphinxcontrib-jsmath-1.0.1 sphinxcontrib-qthelp-2.0.0 sphinxcontrib-serializinghtml-2.0.0 urllib3-2.5.0
 
-[rtd-command-info] start-time: 2025-11-08T19:33:29.957748Z, end-time: 2025-11-08T19:33:54.169904Z, duration: 24, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:35.563399Z, end-time: 2025-11-08T19:40:59.735269Z, duration: 24, exit-code: 0
 python -m pip install --upgrade --upgrade-strategy only-if-needed --no-cache-dir .
 Processing /home/docs/checkouts/readthedocs.org/user_builds/gixstools/checkouts/latest
   Installing build dependencies: started
@@ -270,42 +270,42 @@ Collecting widgetsnbextension~=4.0.14 (from ipywidgets<9,>=7.6.0->ipympl->gixsto
 Collecting jupyterlab_widgets~=3.0.15 (from ipywidgets<9,>=7.6.0->ipympl->gixstools==0.0.168)
   Downloading jupyterlab_widgets-3.0.16-py3-none-any.whl.metadata (20 kB)
 Downloading fabio-2025.10.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 15.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 80.7 MB/s  0:00:00
 Downloading matplotlib-3.10.7-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 37.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 321.5 MB/s  0:00:00
 Downloading contourpy-1.3.3-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (362 kB)
 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.60.1-cp313-cp313-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (4.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 83.3 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 324.4 MB/s  0:00:00
 Downloading kiwisolver-1.4.9-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.5 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 104.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 397.9 MB/s  0:00:00
 Downloading numpy-2.3.4-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 148.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 393.1 MB/s  0:00:00
 Downloading pillow-12.0.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 180.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 368.8 MB/s  0:00:00
 Downloading pyfai-2025.3.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (6.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 111.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 21.1 MB/s  0:00:00
 Downloading numexpr-2.14.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (446 kB)
 Downloading pyparsing-3.2.5-py3-none-any.whl (113 kB)
 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
 Downloading silx-2.2.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.8/13.8 MB 109.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.8/13.8 MB 177.4 MB/s  0:00:00
 Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
 Downloading h5py-3.15.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (5.1 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 210.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 260.2 MB/s  0:00:00
 Downloading hdf5plugin-6.0.0-py3-none-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (44.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.9/44.9 MB 175.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.9/44.9 MB 231.9 MB/s  0:00:00
 Downloading ipykernel-7.1.0-py3-none-any.whl (117 kB)
 Downloading comm-0.2.3-py3-none-any.whl (7.3 kB)
 Downloading debugpy-1.8.17-cp313-cp313-manylinux_2_34_x86_64.whl (4.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 106.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 278.6 MB/s  0:00:00
 Downloading ipython-9.7.0-py3-none-any.whl (618 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 618.9/618.9 kB 558.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 618.9/618.9 kB 619.1 MB/s  0:00:00
 Downloading prompt_toolkit-3.0.52-py3-none-any.whl (391 kB)
 Downloading decorator-5.2.1-py3-none-any.whl (9.2 kB)
 Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
 Downloading jedi-0.19.2-py2.py3-none-any.whl (1.6 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 523.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 363.5 MB/s  0:00:00
 Downloading parso-0.8.5-py2.py3-none-any.whl (106 kB)
 Downloading jupyter_client-8.6.3-py3-none-any.whl (106 kB)
 Downloading jupyter_core-5.9.1-py3-none-any.whl (29 kB)
@@ -316,7 +316,7 @@ Downloading platformdirs-4.5.0-py3-none-any.whl (18 kB)
 Downloading psutil-7.1.3-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (263 kB)
 Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
 Downloading pyzmq-27.1.0-cp312-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (840 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 841.0/841.0 kB 391.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 841.0/841.0 kB 388.5 MB/s  0:00:00
 Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
 Downloading asttokens-3.0.0-py3-none-any.whl (26 kB)
 Downloading executing-2.2.1-py2.py3-none-any.whl (28 kB)
@@ -325,26 +325,26 @@ Downloading traitlets-5.14.3-py3-none-any.whl (85 kB)
 Downloading ipympl-0.9.8-py3-none-any.whl (515 kB)
 Downloading ipywidgets-8.1.8-py3-none-any.whl (139 kB)
 Downloading jupyterlab_widgets-3.0.16-py3-none-any.whl (914 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 914.9/914.9 kB 356.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 914.9/914.9 kB 518.8 MB/s  0:00:00
 Downloading widgetsnbextension-4.0.15-py3-none-any.whl (2.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 468.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 367.7 MB/s  0:00:00
 Downloading lxml-6.0.2-cp313-cp313-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 228.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 261.2 MB/s  0:00:00
 Downloading pure_eval-0.2.3-py3-none-any.whl (11 kB)
 Downloading scipy-1.16.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (35.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.7/35.7 MB 164.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.7/35.7 MB 263.7 MB/s  0:00:00
 Downloading wcwidth-0.2.14-py2.py3-none-any.whl (37 kB)
 Building wheels for collected packages: gixstools
   Building wheel for gixstools (pyproject.toml): started
   Building wheel for gixstools (pyproject.toml): finished with status 'done'
-  Created wheel for gixstools: filename=gixstools-0.0.168-cp313-cp313-linux_x86_64.whl size=76486 sha256=f450d59f6994a2a208aeb3287614fde256cb4dc934878217063fee2d111cfa84
-  Stored in directory: /tmp/pip-ephem-wheel-cache-9bbtdxbv/wheels/6d/f1/2d/587a74115b03556db1b67fcee90fc279ab31e95b5a9307da69
+  Created wheel for gixstools: filename=gixstools-0.0.168-cp313-cp313-linux_x86_64.whl size=76484 sha256=971e7def60ead7f1b9b8ebd194ae85886739b22d284452bc09d1282f9479123c
+  Stored in directory: /tmp/pip-ephem-wheel-cache-40s25p2c/wheels/6d/f1/2d/587a74115b03556db1b67fcee90fc279ab31e95b5a9307da69
 Successfully built gixstools
 Installing collected packages: pure-eval, ptyprocess, widgetsnbextension, wcwidth, traitlets, tornado, six, pyzmq, pyparsing, psutil, platformdirs, pillow, pexpect, parso, numpy, nest-asyncio, lxml, kiwisolver, jupyterlab_widgets, ipython-pygments-lexers, fonttools, executing, decorator, debugpy, cycler, comm, asttokens, stack_data, scipy, python-dateutil, prompt_toolkit, numexpr, matplotlib-inline, jupyter-core, jedi, h5py, contourpy, matplotlib, jupyter-client, ipython, hdf5plugin, ipywidgets, ipykernel, fabio, silx, ipympl, pyFAI, gixstools
 
 Successfully installed asttokens-3.0.0 comm-0.2.3 contourpy-1.3.3 cycler-0.12.1 debugpy-1.8.17 decorator-5.2.1 executing-2.2.1 fabio-2025.10.0 fonttools-4.60.1 gixstools-0.0.168 h5py-3.15.1 hdf5plugin-6.0.0 ipykernel-7.1.0 ipympl-0.9.8 ipython-9.7.0 ipython-pygments-lexers-1.1.1 ipywidgets-8.1.8 jedi-0.19.2 jupyter-client-8.6.3 jupyter-core-5.9.1 jupyterlab_widgets-3.0.16 kiwisolver-1.4.9 lxml-6.0.2 matplotlib-3.10.7 matplotlib-inline-0.2.1 nest-asyncio-1.6.0 numexpr-2.14.1 numpy-2.3.4 parso-0.8.5 pexpect-4.9.0 pillow-12.0.0 platformdirs-4.5.0 prompt_toolkit-3.0.52 psutil-7.1.3 ptyprocess-0.7.0 pure-eval-0.2.3 pyFAI-2025.3.0 pyparsing-3.2.5 python-dateutil-2.9.0.post0 pyzmq-27.1.0 scipy-1.16.3 silx-2.2.2 six-1.17.0 stack_data-0.6.3 tornado-6.5.2 traitlets-5.14.3 wcwidth-0.2.14 widgetsnbextension-4.0.15
 
-[rtd-command-info] start-time: 2025-11-08T19:33:54.229419Z, end-time: 2025-11-08T19:33:56.778943Z, duration: 2, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:40:59.779478Z, end-time: 2025-11-08T19:41:02.471680Z, duration: 2, exit-code: 0
 python -m pip install --exists-action=w --no-cache-dir -r docs/requirements.txt
 Collecting sphinx==7.1.2 (from -r docs/requirements.txt (line 1))
   Downloading sphinx-7.1.2-py3-none-any.whl.metadata (5.8 kB)
@@ -395,19 +395,19 @@ Requirement already satisfied: idna<4,>=2.5 in /home/docs/checkouts/readthedocs.
 Requirement already satisfied: urllib3<3,>=1.21.1 in /home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages (from requests>=2.25.0->sphinx==7.1.2->-r docs/requirements.txt (line 1)) (2.5.0)
 Requirement already satisfied: certifi>=2017.4.17 in /home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages (from requests>=2.25.0->sphinx==7.1.2->-r docs/requirements.txt (line 1)) (2025.10.5)
 Downloading sphinx-7.1.2-py3-none-any.whl (3.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 97.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 96.1 MB/s  0:00:00
 Downloading sphinx_rtd_theme-1.3.0rc1-py2.py3-none-any.whl (2.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 289.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.8/2.8 MB 67.4 MB/s  0:00:00
 Downloading alabaster-0.7.16-py3-none-any.whl (13 kB)
 Downloading docutils-0.18.1-py2.py3-none-any.whl (570 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 570.0/570.0 kB 440.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 570.0/570.0 kB 22.1 MB/s  0:00:00
 Downloading sphinxcontrib_jquery-4.1-py2.py3-none-any.whl (121 kB)
 Downloading sphinxcontrib_bibtex-2.5.0-py3-none-any.whl (39 kB)
 Downloading pybtex-0.25.1-py2.py3-none-any.whl (127 kB)
 Downloading latexcodec-3.0.1-py3-none-any.whl (18 kB)
 Downloading pybtex_docutils-1.0.3-py3-none-any.whl (6.4 kB)
 Downloading pyyaml-6.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (801 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 801.6/801.6 kB 641.5 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 801.6/801.6 kB 677.3 MB/s  0:00:00
 Installing collected packages: PyYAML, latexcodec, docutils, alabaster, sphinx, pybtex, sphinxcontrib-jquery, pybtex-docutils, sphinxcontrib-bibtex, sphinx-rtd-theme
   Attempting uninstall: docutils
     Found existing installation: docutils 0.21.2
@@ -424,7 +424,7 @@ Installing collected packages: PyYAML, latexcodec, docutils, alabaster, sphinx, 
 
 Successfully installed PyYAML-6.0.3 alabaster-0.7.16 docutils-0.18.1 latexcodec-3.0.1 pybtex-0.25.1 pybtex-docutils-1.0.3 sphinx-7.1.2 sphinx-rtd-theme-1.3.0rc1 sphinxcontrib-bibtex-2.5.0 sphinxcontrib-jquery-4.1
 
-[rtd-command-info] start-time: 2025-11-08T19:33:56.839657Z, end-time: 2025-11-08T19:33:56.872660Z, duration: 0, exit-code: 0
+[rtd-command-info] start-time: 2025-11-08T19:41:02.547805Z, end-time: 2025-11-08T19:41:02.584211Z, duration: 0, exit-code: 0
 cat docs/source/conf.py
 import sys
 from pathlib import Path
@@ -433,145 +433,60 @@ from unittest.mock import MagicMock
 gixspath = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(gixspath))
 
-# Mock the required modules
+# Minimal, safe mocks for external heavy dependencies so Sphinx can import
+# the package and read docstrings. Do NOT mock internal `gixstools` modules
+# because we want autodoc to import them and extract their docstrings.
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
         return MagicMock()
 
-# List of packages to mock
+# External modules to mock because they may not be available during RTD builds
 MOCK_MODULES = [
     'numpy',
     'matplotlib',
-class MockNumpyArray:
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __array_function__(self, *args, **kwargs):
-        return MagicMock()
-
-    def max(self):
-        return 1000.0
-
-class MockDetector:
-    """Mock Detector class with key attributes and methods."""
-    def __init__(self):
-        self.pixel1 = 1e-4
-        self.pixel2 = 1e-4
-        self.shape = (2167, 2070)
-        self.MAX_INT = 65535
-
-    def calc_mask(self):
-        return MockNumpyArray()
-
-    def calc_mask_dezinger(self, image):
-        return MockNumpyArray()
-
-class MockDirectBeam:
-    """Mock DirectBeam class with essential functionality."""
-    def __init__(self, filename):
-        self.data = MockNumpyArray()
-        self.center = (1000, 1000)
-        self.width = (50, 50)
-        self.detector = MockDetector()
-
-    def find_center(self):
-        return self.center
-
-class MockSpatiallyResolvedScan:
-    """Mock SRS class with core functionality."""
-    def __init__(self, directory, approximate_detector_distance_meters, **kwargs):
-        self.directory = directory
-        self.dist_guess = approximate_detector_distance_meters
-        self.direct_beam = MockDirectBeam(None)
-        self.type = "om"
-        
-    def fit(self, **kwargs):
-        self.omega0 = 0.5
-        self.det_dist_fit = 150.0
-        
-    def show_omega_scan(self, **kwargs):
-        return MagicMock(), MagicMock()
-
     'matplotlib.pyplot',
+    'matplotlib.pylab',
+    'matplotlib.colors',
+    'matplotlib.ticker',
     'pyFAI',
-    'matplotlib.pyplot',
-    'pyFAI',
-    'silx',
+    'fabio',
+    'scipy',
+    'scipy.optimize',
+    'scipy.stats',
     'h5py',
+    'silx',
     'toml',
-    'natsort'
-    sys.modules[mod_name] = Mock()
+    'natsort',
+]
 
-# Special mock for align module with the required functions
-class MockAlign:
-    @staticmethod
-    def create_z_macro(*args, **kwargs):
-        return {
-# Set up numpy mock with array support
-class MockNumpy(MagicMock):
-    ndarray = MockNumpyArray
-    def array(self, *args, **kwargs):
-        return MockNumpyArray()
-sys.modules['numpy'] = MockNumpy()
+for mod_name in MOCK_MODULES:
+    sys.modules.setdefault(mod_name, Mock())
 
-# Set up matplotlib mocks
-sys.modules['matplotlib.pylab'] = MagicMock()
-sys.modules['matplotlib.colors'] = MagicMock()
-sys.modules['matplotlib.ticker'] = MagicMock()
+# Special small helpers for common patterns
+class _NDArrayMock(MagicMock):
+    def max(self, *args, **kwargs):
+        return 1.0
 
-# Set up scipy mocks
-sys.modules['scipy.optimize'] = MagicMock()
-sys.modules['scipy.special'] = MagicMock()
+# Provide a minimal numpy-like API on the mocked numpy
+if isinstance(sys.modules.get('numpy'), Mock):
+    np_mock = sys.modules['numpy']
+    np_mock.ndarray = _NDArrayMock
+    np_mock.array = lambda *a, **k: _NDArrayMock()
 
-# Set up detector mock
-sys.modules['gixstools.detector'] = MagicMock()
-sys.modules['gixstools.detector'].Detector = MockDetector
-sys.modules['gixstools.detector'].DirectBeam = MockDirectBeam
-sys.modules['gixstools.detector'].SpatiallyResolvedScan = MockSpatiallyResolvedScan
-            "horizontal_shutter": "umv s2hg 0.6",
-            "vertical_shutter": "umv s2vg 0.1",
-            "set_omega": "umv om {:.4f}\n",
-            "set_vertical": "umv z {:.4f}\n",
-        default_config = {
-            "move_vertical": "umvr z {:.4f}\n",
-            "expose": "eiger_run 0.1 {}.tif\n",
-            "beamstop": True
-        }
+# If other modules need simple attributes we can add them below, but avoid
+# mocking gixstools.* so autodoc reads real docstrings.
 
-sys.modules['gixstools.config'] = MockConfig()
-
-# Configuration file for the Sphinx documentation builder.
-
-        align_config = {
-            'info': 'title',
-            'im_filetype': '.tif',
-            'beam_position': {'x': 'C', 'y': 'C'},
-            'unit': 'mm'
-        }
-        if subdict == "align":
-            return align_config
-        return default_config
 # -- Project information
 
 project = 'Grazing Incidence X-ray Scattering Tools'
 copyright = '2025, Edward Tortorici'
 author = 'Edward Tortorici'
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-    'exclude-members': '__weakref__'
+
+release = '0.1'
+version = '0.1.0'
 
 # -- General configuration
-
-napoleon_google_docstring = True
-napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
-napoleon_include_private_with_doc = False
-napoleon_include_special_with_doc = True
-napoleon_use_param = True
-napoleon_use_keyword = True
 
 extensions = [
     'sphinx.ext.duration',
@@ -585,8 +500,9 @@ extensions = [
 
 autodoc_default_options = {
     'members': True,
-    'undoc-members': False,
-    'show-inheritance': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': True,
 }
 autosummary_generate = True
 
@@ -604,20 +520,58 @@ templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
 
-# -- Options for EPUB output
+# -- Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_param = True
+napoleon_use_keyword = True
+
+# -- EPUB
 epub_show_urls = 'footnote'
 
-[rtd-command-info] start-time: 2025-11-08T19:33:56.925415Z, end-time: 2025-11-08T19:33:57.178123Z, duration: 0, exit-code: 2
+[rtd-command-info] start-time: 2025-11-08T19:41:02.620801Z, end-time: 2025-11-08T19:41:03.157434Z, duration: 0, exit-code: 2
 python -m sphinx -T -b html -d _build/doctrees -D language=en . $READTHEDOCS_OUTPUT/html
 Running Sphinx v7.1.2
+making output directory... done
+checking bibtex cache... out of date
+parsing bibtex file /home/docs/checkouts/readthedocs.org/user_builds/gixstools/checkouts/latest/docs/source/references.bib... parsed 4 entries
+[autosummary] generating autosummary for: align.rst, detector.rst, index.rst, installation.rst, wedge.rst
 
 Traceback (most recent call last):
-  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/config.py", line 355, in eval_config_file
-    code = compile(f.read(), filename.encode(fs_encoding), 'exec')
-  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/checkouts/latest/docs/source/conf.py", line 18
-    class MockNumpyArray:
-    ^^^^^
-SyntaxError: invalid syntax
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/generate.py", line 455, in generate_autosummary_docs
+    name, obj, parent, modname = import_by_name(entry.name)
+                                 ~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/__init__.py", line 650, in import_by_name
+    raise ImportExceptionGroup('no module named %s' % ' or '.join(tried), exceptions)
+sphinx.ext.autosummary.ImportExceptionGroup: no module named gixstools.align.create_om_macro
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/events.py", line 96, in emit
+    results.append(listener.handler(self.app, *args))
+                   ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/__init__.py", line 808, in process_generate_options
+    generate_autosummary_docs(genfiles, suffix=suffix, base_path=app.srcdir,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              app=app, imported_members=imported_members,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              overwrite=app.config.autosummary_generate_overwrite,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              encoding=app.config.source_encoding)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/generate.py", line 460, in generate_autosummary_docs
+    name, obj, parent, modname = import_ivar_by_name(entry.name)
+                                 ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/__init__.py", line 707, in import_ivar_by_name
+    real_name, obj, parent, modname = import_by_name(name, prefixes)
+                                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/ext/autosummary/__init__.py", line 650, in import_by_name
+    raise ImportExceptionGroup('no module named %s' % ' or '.join(tried), exceptions)
+sphinx.ext.autosummary.ImportExceptionGroup: no module named gixstools.align
 
 The above exception was the direct cause of the following exception:
 
@@ -628,16 +582,17 @@ Traceback (most recent call last):
                  args.warning, args.freshenv, args.warningiserror,
                  args.tags, args.verbosity, args.jobs, args.keep_going,
                  args.pdb)
-  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/application.py", line 207, in __init__
-    self.config = Config.read(self.confdir, confoverrides or {}, self.tags)
-                  ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/config.py", line 179, in read
-    namespace = eval_config_file(filename, tags)
-  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/config.py", line 359, in eval_config_file
-    raise ConfigError(msg % err) from err
-sphinx.errors.ConfigError: There is a syntax error in your configuration file: invalid syntax (conf.py, line 18)
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/application.py", line 268, in __init__
+    self._init_builder()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/application.py", line 339, in _init_builder
+    self.events.emit('builder-inited')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/home/docs/checkouts/readthedocs.org/user_builds/gixstools/envs/latest/lib/python3.13/site-packages/sphinx/events.py", line 107, in emit
+    raise ExtensionError(__("Handler %r for event %r threw an exception") %
+                         (listener.handler, name), exc, modname=modname) from exc
+sphinx.errors.ExtensionError: Handler <function process_generate_options at 0x742035bf8720> for event 'builder-inited' threw an exception (exception: no module named gixstools.align)
 
-
-Configuration error:
-There is a syntax error in your configuration file: invalid syntax (conf.py, line 18)
+Extension error (sphinx.ext.autosummary):
+Handler <function process_generate_options at 0x742035bf8720> for event 'builder-inited' threw an exception (exception: no module named gixstools.align)
 
