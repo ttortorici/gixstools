@@ -18,11 +18,35 @@ MOCK_MODULES = [
     'matplotlib.pyplot',
     'pyFAI',
     'fabio',
-    'gixstools.config'
+    'scipy',
+    'scipy.stats',
+    'scipy.optimize',
+    'h5py',
+    'silx',
+    'gixstools.config',
+    'gixstools.align',
+    'gixstools.align.macro',
+    'gixstools.align.specular',
+    'gixstools.wedge',
+    'gixstools.detector'
 ]
 
+# Create mock objects for all these modules
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
+
+# Special mock for align module with the required functions
+class MockAlign:
+    @staticmethod
+    def create_z_macro(*args, **kwargs):
+        return None
+    
+    @staticmethod
+    def create_om_macro(*args, **kwargs):
+        return None
+
+sys.modules['gixstools.align'] = MockAlign()
+sys.modules['gixstools.align.macro'] = MockAlign()
 
 # Mock config with specific return values
 class MockConfig:
